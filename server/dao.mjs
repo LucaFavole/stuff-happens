@@ -41,10 +41,10 @@ export const getUserHistory = (userId) => {
             }
 
             const gamesSql = `
-                SELECT id, outcome, final_score, start_ts
+                SELECT id, outcome, final_score, date
                 FROM Games
                 WHERE user_id = ?
-                ORDER BY start_ts DESC
+                ORDER BY date DESC
             `;
             db.all(gamesSql, [userId], async (err, games) => {
                 if (err) {
@@ -88,7 +88,7 @@ export const getUserHistory = (userId) => {
                         gameHistoryFormatted.push({
                             id: game.id,
                             outcome: game.outcome === 'won' ? 'Won' : 'Lost',
-                            date: new Date(game.start_ts).toISOString(),
+                            date: new Date(game.date).toISOString(),
                             totalCardsCollected: game.final_score,
                             cardsPlayed: cardsPlayedFormatted
                         });
@@ -165,8 +165,8 @@ export const checkPlacement = (placementData) => {
 export const saveGame = (gameData) => {
     return new Promise((resolve, reject) => {
         const {userId,initialCardObjects, playedRoundsLog,outcome} = gameData;
-        const gameSql = `INSERT INTO Games (user_id, outcome, final_score, start_ts, end_ts) 
-                         VALUES (?, ?, ?, DATETIME('now', '-5 minutes'), DATETIME('now'))`;
+        const gameSql = `INSERT INTO Games (user_id, outcome, final_score, date) 
+                         VALUES (?, ?, ?, DATETIME('now'))`;
         db.run(gameSql, [userId, outcome, playedRoundsLog.length+3], function(gameInsertErr) {
             if (gameInsertErr) {
                 return reject(gameInsertErr);

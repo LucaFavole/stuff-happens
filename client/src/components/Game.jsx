@@ -41,10 +41,12 @@ const PlacementSlot = ({ onPlace, disabled }) => (
 function Game({ user, isDemoMode = false }) {
     const navigate = useNavigate();
 
-/*prova*/ const [initialCardObjects, setInitialCardObjects] = useState([]);
-/*prova*/    const [playedRoundsLog, setPlayedRoundsLog] = useState([]);
-/*prova*/    const [currentRoundNumber, setCurrentRoundNumber] = useState(1);
+    const [initialCardObjects, setInitialCardObjects] = useState([]);
+    const [playedRoundsLog, setPlayedRoundsLog] = useState([]);
+    const [currentRoundNumber, setCurrentRoundNumber] = useState(1);
+
     const [gameState, setGameState] = useState('LOADING_INITIAL');
+
     const [ownedCards, setOwnedCards] = useState([]);
     const [currentChallengeCardDetails, setCurrentChallengeCardDetails] = useState(null);
     const [mistakesMade, setMistakesMade] = useState(0);
@@ -53,7 +55,7 @@ function Game({ user, isDemoMode = false }) {
     const [gameOutcome, setGameOutcome] = useState(null);
     const [timer, setTimer] = useState(30);
     const [timerActive, setTimerActive] = useState(false);
-    const [showRoundResultBriefly, setShowRoundResultBriefly] = useState(false);
+    //const [showRoundResultBriefly, setShowRoundResultBriefly] = useState(false);
 
     const MAX_CARDS_TO_WIN = isDemoMode ? 4 : 6;
     const MAX_MISTAKES = isDemoMode ? 1 : 3;
@@ -79,14 +81,14 @@ function Game({ user, isDemoMode = false }) {
         setLostCardIdsThisGame([]);
         setRoundMessage('');
         setGameOutcome(null);
-        setShowRoundResultBriefly(false);
-        /*prova*/ setInitialCardObjects([]);
-        /*prova*/ setPlayedRoundsLog([]);
-        /*prova*/ setCurrentRoundNumber(1);
+        //setShowRoundResultBriefly(false);
+        setInitialCardObjects([]);
+        setPlayedRoundsLog([]);
+        setCurrentRoundNumber(1);
         try {
             const initialCards = await API.getInitialCards();
             setOwnedCards(initialCards.sort((a, b) => a.misfortuneIndex - b.misfortuneIndex));
-            /*prova*/ setInitialCardObjects(initialCards);
+            setInitialCardObjects(initialCards);
             startNewRoundFlow(initialCards.map(c => c.id), []);
         } catch (error) {
             console.error("Error initializing game:", error);
@@ -171,7 +173,7 @@ function Game({ user, isDemoMode = false }) {
     };
 
     const handlePlacementResult = (isCorrect, timedOut, serverProvidedCardDetails) => {
-        setShowRoundResultBriefly(true);
+        //setShowRoundResultBriefly(true);
         let newOwnedCards = [...ownedCards];
         let newMistakes = mistakesMade;
         let newLostCardIds = [...lostCardIdsThisGame];
@@ -216,10 +218,17 @@ function Game({ user, isDemoMode = false }) {
                 API.saveGame(user.id, initialCardObjects, [...playedRoundsLog, roundDetails], currentOutcomeResult);
             }
         } else {
-                startNewRoundFlow(newOwnedCards.map(c => c.id), newLostCardIds);
+                setGameState('ROUND_OVER_AWAITING_NEXT');
+                //startNewRoundFlow(newOwnedCards.map(c => c.id), newLostCardIds);
         }
         setPlayedRoundsLog(prev => [...prev, roundDetails]);
         setCurrentRoundNumber(prev => prev + 1);
+    };
+
+    const handleProceedToNextRound = () => {
+        if (gameState === 'ROUND_OVER_AWAITING_NEXT') {
+            startNewRoundFlow(ownedCards.map(c => c.id), lostCardIdsThisGame);
+        }
     };
 
 
@@ -245,15 +254,31 @@ function Game({ user, isDemoMode = false }) {
                 </Col>
             </Row>
 
-            <Row className="justify-content-center align-items-center flex-nowrap" style={{ overflowX: 'auto', paddingBottom: '15px', minHeight: '200px', border: '1px solid #eee', borderRadius: '8px', background: '#f8f9fa' }}>
-                <PlacementSlot onPlace={() => handleCardPlacement(0)} disabled={gameState !== 'PLAYING_ROUND' || !timerActive} />
-                {ownedCards.map((card, index) => (
-                    <React.Fragment key={card.id}>
-                        <OwnedCardDisplay card={card} />
-                        <PlacementSlot onPlace={() => handleCardPlacement(index + 1)} disabled={gameState !== 'PLAYING_ROUND' || !timerActive} />
-                    </React.Fragment>
-                ))}
-            </Row>
+            {/* Mostra la mano e gli slot solo se non è game over e non si sta solo mostrando il risultato del round */}
+            {gameState !== 'GAME_OVER' && gameState !== 'ROUND_OVER_AWAITING_NEXT' && (
+                <Row className="justify-content-center align-items-center flex-nowrap" style={{ overflowX: 'auto', paddingBottom: '15px', minHeight: '200px', border: '1px solid #eee', borderRadius: '8px', background: '#f8f9fa' }}>
+                    <PlacementSlot onPlace={() => handleCardPlacement(0)} disabled={gameState !== 'PLAYING_ROUND' || !timerActive} />
+                    {ownedCards.map((card, index) => (
+                        <React.Fragment key={card.id}>
+                            <OwnedCardDisplay card={card} />
+                            <PlacementSlot onPlace={() => handleCardPlacement(index + 1)} disabled={gameState !== 'PLAYING_ROUND' || !timerActive} />
+                        </React.Fragment>
+                    ))}
+                </Row>
+            )}
+            {/* Mostra la mano anche quando il round è finito, per contesto, ma senza slot attivi */}
+            {(gameState === 'ROUND_OVER_AWAITING_NEXT' || gameState === 'GAME_OVER') && ownedCards.length > 0 && (
+                <Row className="justify-content-center align-items-center flex-nowrap" style={{ opacity: 0.7, overflowX: 'auto', paddingBottom: '15px', minHeight: '200px', border: '1px solid #eee', borderRadius: '8px', background: '#f0f0f0', pointerEvents: 'none' }}>
+                    <div style={{ margin: '5px 10px', minHeight: '150px', width: '50px' }}></div> {/* Placeholder per lo slot iniziale */}
+                    {ownedCards.map((card) => (
+                        <React.Fragment key={card.id}>
+                            <OwnedCardDisplay card={card} />
+                            <div style={{ margin: '5px 10px', minHeight: '150px', width: '50px' }}></div> {/* Placeholder per gli slot intermedi */}
+                        </React.Fragment>
+                    ))}
+                </Row>
+            )}
+
 
             {gameState === 'PLAYING_ROUND' && currentChallengeCardDetails && (
                 <Row className="mt-3 justify-content-center">
@@ -265,13 +290,22 @@ function Game({ user, isDemoMode = false }) {
                 </Row>
             )}
 
-            {roundMessage && (showRoundResultBriefly || gameState === 'GAME_OVER') && (
+            {/* MODIFICA: Condizione per mostrare il messaggio del round e il pulsante Next Round */}
+            {roundMessage && (gameState === 'ROUND_OVER_AWAITING_NEXT' || gameState === 'GAME_OVER') && (
                 <Alert
-                    variant={gameOutcome === 'won' || gameOutcome === 'won_demo' || (roundMessage.includes('Correct!')) ? "success" : "danger"}
+                    variant={roundMessage || (gameOutcome && gameOutcome.includes('won') ? "success" : "danger")}
                     className="mt-3 text-center"
                 >
                     {roundMessage.split("\n").map((line, i) => <p key={i} className="mb-0">{line}</p>)}
                 </Alert>
+            )}
+
+            {gameState === 'ROUND_OVER_AWAITING_NEXT' && !gameOutcome && ( // Mostra "Next Round" solo se il gioco non è finito
+                <div className="mt-3 text-center">
+                    <Button variant="info" size="lg" onClick={handleProceedToNextRound}>
+                        Next Round
+                    </Button>
+                </div>
             )}
 
             {gameState === 'GAME_OVER' && (

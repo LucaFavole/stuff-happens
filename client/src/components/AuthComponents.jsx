@@ -27,7 +27,7 @@ function LoginForm(props) {
                     <Form action={formAction}>
                         <Form.Group controlId='username' className='mb-3'>
                             <Form.Label>Email</Form.Label>
-                            <Form.Control type='email' name='username' required />
+                            <Form.Control type='username' name='username' required />
                         </Form.Group>
 
                         <Form.Group controlId='password' className='mb-3'>
