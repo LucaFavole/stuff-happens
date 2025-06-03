@@ -24,14 +24,14 @@ function User(id, username, hashedPassword, salt) {
 function Card(id, name="", imageFilename="", misfortuneIndex=0) {
     this.id = id;
     this.name = name;
-    this.imageFilename = imageFilename;
-    this.misfortuneIndex = misfortuneIndex;
+    this.image_filename = imageFilename;
+    this.misfortune_index = misfortuneIndex;
     this.serialize = () => {
         return {
             id: this.id,
             name: this.name,
-            imageFilename: this.imageFilename,
-            misfortuneIndex: this.misfortuneIndex,
+            image_filename: this.image_filename,
+            misfortune_index: this.misfortune_index,
         };
     };
 }

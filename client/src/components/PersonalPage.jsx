@@ -16,7 +16,7 @@ function PersonalPage({ user }) {
     const [gameHistory, setGameHistory] = useState([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(true);
     const [errorHistory, setErrorHistory] = useState(null);
-    const [redirectToGame, setRedirectToGame] = useState(false);
+    const [redirectToGame, setRedirectToGame] = useState(null);
 
     useEffect(() => {
         setCurrentUser(user);
@@ -46,14 +46,19 @@ function PersonalPage({ user }) {
         }
     }, [currentUser]);
 
-    const handleStartGame = () => {
+    const handleStartGame = async () => {
         if (currentUser) {
-            setRedirectToGame(true);
+            try {
+                const { gameId } = await API.createNewGame();
+                setRedirectToGame(`/Game/${gameId}`);
+            } catch (err) {
+                setErrorHistory('Failed to start new game');
+            }
         }
     };
 
     if (redirectToGame) {
-        return <Navigate to="/Game" replace />; // Assuming "/" is the game route
+        return <Navigate to={redirectToGame} replace />;
     }
 
     if (!currentUser || !currentUser.id) {
