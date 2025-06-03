@@ -10,7 +10,9 @@ import { Routes, Route, Navigate } from "react-router";
 import { LoginForm } from "./components/AuthComponents.jsx";
 import NotFound from "./components/NotFound";
 import API from "./API/API.mjs";
+import {useNavigate} from "react-router-dom";
 function App() {
+    const navigate = useNavigate();
     const [loggedIn, setLoggedIn] = useState(false);
     const [message, setMessage] = useState('');
     const [user, setUser] = useState('');
@@ -20,7 +22,7 @@ function App() {
             setLoggedIn(true);
             setUser(user);
         };
-        checkAuth();
+        checkAuth().then();
     }, []);
 
     const handleLogin = async (credentials) => {
@@ -36,13 +38,13 @@ function App() {
     const handleLogout = async () => {
         await API.logOut();
         setLoggedIn(false);
-        // clean up everything
         setMessage('');
+        navigate('/');
     };
   return (
       <Routes>
           <Route element={ <DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} message={message} setMessage={setMessage} /> } >
-              <Route path="/" element={<MainPage />} />
+              <Route path="/" element={loggedIn ? <Navigate to="/PersonalPage" /> : <MainPage />} />
               <Route path="/PersonalPage" element={loggedIn ? <PersonalPage user={user} /> : <Navigate to="/login" />} />
                 <Route path="/Game/:gameId?" element={loggedIn ? <Game user={user}/> : <Game isDemoMode={true} />} />
           </Route>

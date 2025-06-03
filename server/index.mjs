@@ -72,7 +72,7 @@ app.post('/api/sessions', passport.authenticate('local'), (req, res) => {
 });
 
 app.delete('/api/sessions/current', (req, res) => {
-  req.logout(() => res.sendStatus(204));
+  req.logout(() => res.status(204).json({ message: 'Logout successful' }));
 });
 
 app.get('/api/sessions/current', (req, res) => {

@@ -1,6 +1,7 @@
 const SERVER_URL = "http://localhost:3001/api";
 
 const handleResponse = async (response) => {
+    if (response.status === 204) return;
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || `Request failed with status ${response.status}`);
