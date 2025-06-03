@@ -1,10 +1,9 @@
 import { useActionState } from "react";
 import { Form, Button, Row, Col, Alert } from 'react-bootstrap';
 import { Link } from 'react-router';
-
 function LoginForm(props) {
-    const [state, formAction, isPending] = useActionState(loginFunction, {username: '', password: ''});
-
+    const initialState = { error: null, success: false };
+    const [state, formAction, isPending] = useActionState(loginFunction, initialState);
     async function loginFunction(prevState, formData) {
         const credentials = {
             username: formData.get('username'),
@@ -13,9 +12,9 @@ function LoginForm(props) {
 
         try {
             await props.handleLogin(credentials);
-            return { success: true };
+            return {  error: null, success: true };
         } catch (error) {
-            return { error: 'Login failed. Check your credentials.' };
+            return { error: 'Login failed. Check your credentials.', success: false };
         }
     }
 
@@ -26,7 +25,7 @@ function LoginForm(props) {
                 <Col md={6}>
                     <Form action={formAction}>
                         <Form.Group controlId='username' className='mb-3'>
-                            <Form.Label>Email</Form.Label>
+                            <Form.Label>Username</Form.Label>
                             <Form.Control type='username' name='username' required />
                         </Form.Group>
 

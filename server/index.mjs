@@ -17,7 +17,9 @@ import {
   getCurrentOwnedCards,
   getCurrentRoundNumber,
   getGameOutcome,
-  getErrorCount
+  getErrorCount,
+  startTimer,
+  endTimer
 } from './dao.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -92,10 +94,10 @@ app.get('/api/users/:id/history', isLoggedIn, async (req, res) => {
 
 // Game management
 
-app.post('/api/games', isLoggedIn, async (req, res) => {
+app.post('/api/games', async (req, res) => {
   try {
     const initialCards = await getInitialCards();
-    const gameId = await createGame(req.user.id, initialCards);
+    const gameId = await createGame( initialCards,req.user? req.user.id: null);
     res.status(201).json({
       gameId,
       initialCards: initialCards.map(c => ({
@@ -110,40 +112,34 @@ app.post('/api/games', isLoggedIn, async (req, res) => {
   }
 });
 
-app.post('/api/games/:gameId/round', isLoggedIn, async (req, res) => {
+app.post('/api/games/:gameId/round',  async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);
     const { positionIndex, challengeCardId } = req.body;
 
-    // 1. Stato attuale
     const ownedCards = await getCurrentOwnedCards(gameId);
     const roundNumber = await getCurrentRoundNumber(gameId);
 
-    // 2. Validazione scelta
     const placementResult = await checkPlacement(challengeCardId, ownedCards, positionIndex);
+    const lastCardTime = await endTimer(gameId);
+    const time =Date.now() - new Date(lastCardTime.replace(' ', 'T') + 'Z').getTime();
+    if (Date.now() - new Date(lastCardTime.replace(' ', 'T') + 'Z').getTime() > 30000) {
+      placementResult.isCorrect = false; // Forza errore se il tempo è scaduto
+    }
 
-    // 3. Salva round
     await saveRoundState(gameId, {
       cardId: challengeCardId,
       status: placementResult.isCorrect ? 'won_round' : 'lost_round',
       round: roundNumber
     });
 
-    // 4. Calcola nuovo stato
     const updatedOwnedCards = await getCurrentOwnedCards(gameId);
     const errors = await getErrorCount(gameId);
     const outcome = await getGameOutcome(gameId);
 
-    let nextChallengeCard = null;
-
-    // 5. Se la partita è finita, salva l'esito nel DB!
     if (outcome === 'won' || outcome === 'lost') {
       // Salva l'esito e il punteggio finale (numero di carte possedute)
       await endGame(gameId, outcome, updatedOwnedCards.length);
-    } else {
-      // Se la partita continua, prepara la prossima carta
-      const excluded = await getExcludedCards(gameId);
-      nextChallengeCard = await getNewCard(excluded);
     }
 
     res.json({
@@ -153,19 +149,18 @@ app.post('/api/games/:gameId/round', isLoggedIn, async (req, res) => {
       errors,
       round: roundNumber,
       outcome,
-      nextChallengeCard
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Round processing failed' });
   }
 });
 
-app.post('/api/games/:gameId/new-card', isLoggedIn, async (req, res) => {
+app.post('/api/games/:gameId/new-card',  async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);
     const excludedCards = await getExcludedCards(gameId);
     const newCard = await getNewCard(excludedCards);
+    await startTimer(gameId);
     res.json({
       id: newCard.id,
       name: newCard.name,
@@ -187,18 +182,14 @@ app.patch('/api/games/:gameId/end', isLoggedIn, async (req, res) => {
   }
 });
 
-app.get('/api/games/:gameId/state', isLoggedIn, async (req, res) => {
+app.get('/api/games/:gameId/state',  async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);
-    console.log(`Fetching state for gameId: ${gameId}`);
-    // Recupera le carte possedute dal DB
     const ownedCards = await getCurrentOwnedCards(gameId);
 
-    // Recupera errori e round
     const errors = await getErrorCount(gameId);
     const round = await getCurrentRoundNumber(gameId);
 
-    // Stato partita (active, won, lost)
     const outcome = await getGameOutcome(gameId);
     let state = "PLAYING";
     if (outcome === "won") state = "WON";

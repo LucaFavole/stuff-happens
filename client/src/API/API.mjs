@@ -43,6 +43,12 @@ const createNewGame = async () => {
     });
     return handleResponse(response);
 };
+const createNewDemoGame = async () => {
+    const response = await fetch(`${SERVER_URL}/games`, {
+        method: 'POST',
+    });
+    return handleResponse(response);
+};
 
 const getNextChallengeCard = async (gameId) => {
     const response = await fetch(`${SERVER_URL}/games/${gameId}/new-card`, {
@@ -75,7 +81,6 @@ async function getGameState(gameId) {
     return await response.json();
 }
 
-
 const API = {
     // Auth
     logIn,
@@ -90,7 +95,8 @@ const API = {
     // History
     getUserHistory,
 
-    getGameState
+    getGameState,
+    createNewDemoGame
 };
 
 export default API;

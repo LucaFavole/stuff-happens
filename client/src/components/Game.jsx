@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Card, Alert, Spinner, ProgressBar } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import API from '../API/API.mjs';
-
 // Display for a card the player owns
 const OwnedCardDisplay = ({ card }) => (
-    <Card style={{ width: '10rem', margin: '5px', textAlign: 'center', border: '2px solid #ccc' }}>
+    <Card style={{ height:'14rem', width: '10rem', margin: '5px', textAlign: 'center', border: '2px solid #ccc' }}>
         <Card.Img variant="top" src={"http://localhost:3001" + card.image_filename} alt="image" style={{ height: '80px', objectFit: 'cover' }} />
         <Card.Body style={{ padding: '0.5rem' }}>
             <Card.Text style={{ fontSize: '0.8rem', marginBottom: '0.2rem' }}>{card.name}</Card.Text>
@@ -17,13 +16,18 @@ const OwnedCardDisplay = ({ card }) => (
 const CardToPlaceDisplay = ({ cardPublicDetails }) => {
     if (!cardPublicDetails) return null;
     return (
-        <Card style={{ width: '12rem', margin: '10px auto', textAlign: 'center', border: '2px solid blue' }}>
-            <Card.Header as="h5">Place This Card:</Card.Header>
-            <Card.Img variant="top" src={"http://localhost:3001" + cardPublicDetails.image_filename} alt="image" style={{ height: '100px', objectFit: 'cover' }} />
-            <Card.Body>
-                <Card.Title>{cardPublicDetails.name}</Card.Title>
-            </Card.Body>
-        </Card>
+        <div>
+            <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+                Place This Card:
+            </div>
+            <Card style={{ height:'14rem', width: '10rem', margin: '10px auto', textAlign: 'center', border: '2px solid blue' }}>
+                <Card.Img variant="top" src={"http://localhost:3001" + cardPublicDetails.image_filename} alt="image" style={{ height: '100px', objectFit: 'cover' }} />
+                <Card.Body>
+                    <Card.Text style={{ fontSize: '0.8rem', marginBottom: '0.2rem' }}>{cardPublicDetails.name}</Card.Text>
+                </Card.Body>
+            </Card>
+        </div>
+
     );
 };
 
@@ -44,7 +48,7 @@ const PlacementSlot = ({ onPlace, disabled }) => (
         disabled={disabled}
         title="Place card here"
     >
-        ⇩
+        ⇨
     </Button>
 );
 
@@ -58,6 +62,7 @@ function Game({ user, isDemoMode = false }) {
     const [gameState, setGameState] = useState('LOADING');
     const [roundMessage, setRoundMessage] = useState('');
     const [outcome, setOutcome] = useState(null);
+    const [gameOutcome, setGameOutcome] = useState(null);
     const [timer, setTimer] = useState(30);
     const [timerActive, setTimerActive] = useState(false);
     const [errors, setErrors] = useState(0);
@@ -66,19 +71,21 @@ function Game({ user, isDemoMode = false }) {
     // Limits
     const MAX_CARDS_TO_WIN = isDemoMode ? 1 : 3;
     const MAX_MISTAKES = isDemoMode ? 1 : 3;
-
+    const handleStartGame = async () => {
+            try {
+                const { gameId } =user?  await API.createNewGame(): await API.createNewDemoGame();
+                navigate(`/Game/${gameId}`);
+            } catch (err) {
+                setErrors(1);
+                setRoundMessage(err);
+            }
+    };
     // Start game
     useEffect(() => {
         let ignore = false;
         const loadGame = async () => {
             setGameState('LOADING');
             setRoundMessage('');
-            if (isDemoMode) {
-                setGameState('PLAYING');
-                setErrors(0);
-                setRound(1);
-                return;
-            }
             if (!gameId) {
                 setGameState('GAME_OVER');
                 return;
@@ -136,7 +143,8 @@ function Game({ user, isDemoMode = false }) {
             setRoundMessage(result.isCorrect
                 ? `Correct! "${result.newCard.name}" (MI: ${result.newCard.misfortune_index}) added.`
                 : "Wrong placement!");
-            setOutcome(result.outcome);
+            setGameOutcome(result.outcome);
+            setOutcome(result.isCorrect ? 'won' : 'lost');
             setErrors(result.errors);
             setRound(prev => prev + 1);
             setGameState(result.outcome === 'active' ? 'ROUND_OVER_AWAITING_NEXT' : 'GAME_OVER');
@@ -154,6 +162,7 @@ function Game({ user, isDemoMode = false }) {
             const result = await API.submitRoundChoice(gameId, null, challengeCard.id);
             setOwnedCards(result.ownedCards.sort((a, b) => a.misfortune_index - b.misfortune_index));
             setRoundMessage("Time's up!");
+            setOutcome(result.isCorrect ? 'won' : 'lost');
             setOutcome(result.outcome);
             setErrors(result.errors);
             setRound(prev => prev + 1);
@@ -165,7 +174,7 @@ function Game({ user, isDemoMode = false }) {
     };
 
     const handleProceedToNextRound = () => {
-        if (gameState === 'ROUND_OVER_AWAITING_NEXT' && outcome === 'active') {
+        if (gameState === 'ROUND_OVER_AWAITING_NEXT' && gameOutcome === 'active') {
             setRoundMessage('');
             setGameState('PLAYING');
         }
@@ -174,7 +183,7 @@ function Game({ user, isDemoMode = false }) {
     // DEMO MODE: single round game
     useEffect(() => {
         if (isDemoMode && gameState === 'ROUND_OVER_AWAITING_NEXT') {
-            setTimeout(() => setGameState('GAME_OVER'), 800);
+            setGameState('GAME_OVER');
         }
     }, [isDemoMode, gameState]);
 
@@ -195,13 +204,13 @@ function Game({ user, isDemoMode = false }) {
     if (gameState === 'GAME_OVER') {
         return (
             <Container className="text-center mt-5">
-                <h2>{outcome === 'won'
+                <h2>{gameOutcome === 'won'
                     ? 'Congratulations, you won!'
-                    : outcome === 'lost'
+                    : gameOutcome === 'lost'
                         ? 'Sorry, you lost!'
                         : 'Game over'}</h2>
                 <Alert variant={outcome === 'won' ? "success" : "danger"} className="mt-3">{roundMessage}</Alert>
-                <Button variant="primary" onClick={() => window.location.reload()}>New game</Button>
+                <Button variant="primary" onClick={handleStartGame}>New game</Button>
                 <Button variant="secondary" className="ms-2" onClick={() => navigate(user ? '/personalpage' : '/')}>
                     {user ? 'Profile' : 'Home'}
                 </Button>
@@ -257,7 +266,7 @@ function Game({ user, isDemoMode = false }) {
                     {roundMessage}
                 </Alert>
             )}
-            {gameState === 'ROUND_OVER_AWAITING_NEXT' && outcome === 'active' && (
+            {gameState === 'ROUND_OVER_AWAITING_NEXT' && gameOutcome === 'active' && (
                 <div className="mt-3 text-center">
                     <Button variant="info" size="lg" onClick={handleProceedToNextRound}>
                         Next round

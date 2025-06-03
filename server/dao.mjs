@@ -50,6 +50,7 @@ export const getUserHistory = (userId) => {
                 SELECT id, outcome, final_score, date
                 FROM Games
                 WHERE user_id = ?
+                  AND outcome IN ('lost', 'won')
                 ORDER BY date DESC
             `;
             db.all(gamesSql, [userId], async (err, games) => {
@@ -146,12 +147,12 @@ export const getNewCard = (excludedCards) => {
 // --- PARTITA ---
 
 // Crea una nuova partita e inserisce le 3 carte iniziali in GameDetails
-export const createGame = (userId, initialCardObjects) => {
+export const createGame = (initialCardObjects, userId) => {
+
     return new Promise((resolve, reject) => {
         const gameSql = `INSERT INTO Games (user_id, outcome, final_score, date) VALUES (?, ?, ?, DATETIME('now'))`;
         db.run(gameSql, [userId, null, 3], function(gameInsertErr) {
             if (gameInsertErr) return reject(gameInsertErr);
-
             const newGameId = this.lastID;
             const detailInsertPromises = initialCardObjects.map(initialCard =>
                 new Promise((res, rej) => {
@@ -293,6 +294,26 @@ export const getGameOutcome = async (gameId) => {
     if (errors >= MAX_MISTAKES) return 'lost';
     return 'active';
 };
+
+export const startTimer = async (gameId) => {
+    return new Promise((resolve, reject) => {
+        const sql = 'UPDATE Games SET last_card_time = DATETIME("now") WHERE id = ?';
+        db.run(sql, [gameId], function(err) {
+            if (err) reject(err);
+            else resolve();
+        });
+    });
+};
+
+export const endTimer = async (gameId) => {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT last_card_time FROM Games WHERE id = ?';
+        db.get(sql, [gameId], function(err,row) {
+            if (err) reject(err);
+            else resolve(row.last_card_time);
+        });
+    }); 
+}
 
 
 

@@ -1,12 +1,22 @@
 import React from 'react';
 import { Button, Container, Row, Col, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import API from "../API/API.mjs";
 
 function MainPage() {
     const navigate = useNavigate();
 
-    const handleStartDemo = () => {
-        navigate('/game?demo=1');
+    const handleStartDemo = async () => {
+
+            // Chiamata API per creare una nuova demo (deve restituire un gameId o dati demo)
+            const { gameId, demoData } = await API.createNewDemoGame();
+
+            // Salva i dati demo in localStorage (se vuoi tenerli anche localmente)
+            localStorage.setItem('demoGame', JSON.stringify(demoData));
+
+            // Redirect alla pagina del gioco demo
+            navigate(`/game/${gameId}?demo=1`);
+
     };
 
     return (
