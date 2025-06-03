@@ -124,6 +124,7 @@ app.get('/api/cards/new', async (req, res) => {
 
 // GET /api/cards/check-placement
 app.get('/api/cards/check-placement', async (req, res) => {
+  /*
   // timer sul server per la carta
   const challengeStartTime = req.session.challengeStartTime;
   const now = Date.now();
@@ -134,7 +135,7 @@ app.get('/api/cards/check-placement', async (req, res) => {
       timeOut: true,
       message: "Time's up! You did not place the card in time."
     })
-  }
+  }*/
   const sql = await checkPlacement(req.query);
   if (sql) {
     res.json(sql);
