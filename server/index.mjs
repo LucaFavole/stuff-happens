@@ -13,6 +13,13 @@ import res from "express/lib/response.js";
 const app = new express();
 const port = 3001;
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use('/images/cards', express.static(path.join(__dirname, 'public/images/cards')));
 // middleware
 app.use(express.json());
 app.use(morgan('dev'));
