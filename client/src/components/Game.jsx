@@ -5,7 +5,7 @@ import API from '../API/API.mjs';
 
 const OwnedCardDisplay = ({ card }) => (
     <Card style={{ width: '10rem', margin: '5px', textAlign: 'center', border: '2px solid #ccc' }}>
-        <Card.Img variant="top" src={card.imageFilename}  /*alt={"immagine"}*/ style={{ height: '80px', objectFit: 'cover' }}/>
+        <Card.Img variant="top" src={"http://localhost:3001"+card.imageFilename}  alt={"immagine"} style={{ height: '80px', objectFit: 'cover' }}/>
         <Card.Body style={{ padding: '0.5rem' }}>
             <Card.Text style={{ fontSize: '0.8rem', marginBottom: '0.2rem' }}>{card.name}</Card.Text>
             <Card.Text style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>MI: {card.misfortuneIndex}</Card.Text>
@@ -18,7 +18,7 @@ const CardToPlaceDisplay = ({ cardPublicDetails }) => {
     return (
         <Card style={{ width: '12rem', margin: '10px auto', textAlign: 'center', border: '2px solid blue' }}>
             <Card.Header as="h5">Place This Card:</Card.Header>
-            <Card.Img variant="top" src={cardPublicDetails.imageFilename} /*alt={"immagine"}*/ style={{ height: '100px', objectFit: 'cover' }}/>
+            <Card.Img variant="top" src={"http://localhost:3001"+cardPublicDetails.imageFilename} alt={"immagine"} style={{ height: '100px', objectFit: 'cover' }}/>
             <Card.Body>
                 <Card.Title>{cardPublicDetails.name}</Card.Title>
             </Card.Body>
