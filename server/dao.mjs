@@ -1,6 +1,8 @@
 import sqlite from 'sqlite3';
 import crypto from 'crypto';
 import {User, Card, Game, GameDetail} from "./models.mjs";
+import req from "express/lib/request.js";
+import res from "express/lib/response.js";
 
 const db = new sqlite.Database('database.sqlite', (err) => {
     if (err) throw err;

@@ -7,6 +7,8 @@ import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import session from 'express-session';
 import {getUser, getUserHistory, getInitialCards,getNewCard,checkPlacement,saveGame} from './dao.mjs';
+import req from "express/lib/request.js";
+import res from "express/lib/response.js";
 // init express
 const app = new express();
 const port = 3001;
@@ -108,6 +110,9 @@ app.get('/api/cards/initial', async (req, res) => {
 
 // GET /api/cards/new
 app.get('/api/cards/new', async (req, res) => {
+  // timer sul server per la carta
+  req.session.challengeStartTime = Date.now();
+  //
   const sql = await getNewCard(req.query.excludedCards || []);
   if (sql) {
     res.json(sql);
@@ -119,6 +124,17 @@ app.get('/api/cards/new', async (req, res) => {
 
 // GET /api/cards/check-placement
 app.get('/api/cards/check-placement', async (req, res) => {
+  // timer sul server per la carta
+  const challengeStartTime = req.session.challengeStartTime;
+  const now = Date.now();
+  delete req.session.challengeStartTime;
+  if (!challengeStartTime || (now - challengeStartTime) > 30000) {
+    return res.json({
+      isCorrect: false,
+      timeOut: true,
+      message: "Time's up! You did not place the card in time."
+    })
+  }
   const sql = await checkPlacement(req.query);
   if (sql) {
     res.json(sql);
