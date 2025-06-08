@@ -109,7 +109,7 @@ function PersonalPage({ user }) {
                                 <Card key={partita.id} className="mb-3 shadow-sm hover-shadow">
                                     <Card.Header as="h5" className={`bg-${partita.outcome === 'Won' ? 'success' : 'danger'} text-white`}>
                                         Game {partita.outcome}
-                                        <span className="float-end small">{new Date(partita.date).toLocaleDateString('en-US')}</span>
+                                        <span className="float-end small">{new Date(partita.date).toLocaleTimeString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit',hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                                     </Card.Header>
                                     <Card.Body>
                                         <Card.Subtitle className="mb-2 text-muted">

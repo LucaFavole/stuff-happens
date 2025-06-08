@@ -171,7 +171,7 @@ export const createGame = (initialCardObjects, userId) => {
 
 // Salva lo stato di un singolo round (viene chiamato ad ogni round)
 export const saveRoundState = (gameId, roundState) => {
-    // roundState: {cardId, status, round}
+
     return new Promise((resolve, reject) => {
         const sql = 'INSERT INTO GameDetails (game_id, card_id, status, round_presented) VALUES (?, ?, ?, ?)';
         db.run(
@@ -192,6 +192,32 @@ export const saveRoundState = (gameId, roundState) => {
         );
     });
 };
+
+export const updateRoundState = (gameId, roundState) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            UPDATE GameDetails 
+            SET status = ?
+            WHERE game_id = ? AND card_id = ?
+        `;
+        db.run(
+            sql,
+            [
+                roundState.status,
+                gameId,
+                roundState.cardId
+            ],
+            function(err) {
+                if (err) {
+                    console.error("Error updating round state:", err);
+                    reject(err);
+                } else {
+                    resolve({ detailId: this.changes });
+                }
+            }
+        );
+    });
+}
 
 // Aggiorna l’outcome e il punteggio finale della partita (chiamato a fine partita)
 export const endGame = (gameId, outcome, finalScore) => {
@@ -315,6 +341,23 @@ export const endTimer = async (gameId) => {
     }); 
 }
 
+export const getRoundState = async (gameId, round) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT card_id
+            FROM GameDetails GD
+            WHERE GD.game_id = ? AND GD.round_presented = ?
+        `;
+        db.get(sql, [gameId, round], (err, row) => {
+            if (err) reject(err);
+            else if (!row) resolve(null);
+            else resolve(
+                {
+                card_id : row.card_id,
+            });
+        });
+    });
+};
 
 
 

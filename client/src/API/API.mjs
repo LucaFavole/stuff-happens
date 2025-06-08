@@ -58,12 +58,12 @@ const getNextChallengeCard = async (gameId) => {
     return handleResponse(response);
 };
 
-const submitRoundChoice = async (gameId, positionIndex, challengeCardId) => {
+const submitRoundChoice = async (gameId, positionIndex) => {
     const response = await fetch(`${SERVER_URL}/games/${gameId}/round`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ positionIndex, challengeCardId })
+        body: JSON.stringify({ positionIndex})
     });
     return handleResponse(response);
 };

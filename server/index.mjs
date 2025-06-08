@@ -19,7 +19,7 @@ import {
   getGameOutcome,
   getErrorCount,
   startTimer,
-  endTimer
+  endTimer, updateRoundState, getRoundState
 } from './dao.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -115,19 +115,18 @@ app.post('/api/games', async (req, res) => {
 app.post('/api/games/:gameId/round',  async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);
-    const { positionIndex, challengeCardId } = req.body;
+    const { positionIndex} = req.body;
 
     const ownedCards = await getCurrentOwnedCards(gameId);
     const roundNumber = await getCurrentRoundNumber(gameId);
-
+    const challengeCardId = await getRoundState(gameId,roundNumber).then(state => state.card_id);
+    console.log(`Processing round ${roundNumber} for game ${gameId} with challenge card ID ${challengeCardId}`);
     const placementResult = await checkPlacement(challengeCardId, ownedCards, positionIndex);
     const lastCardTime = await endTimer(gameId);
-    const time =Date.now() - new Date(lastCardTime.replace(' ', 'T') + 'Z').getTime();
     if (Date.now() - new Date(lastCardTime.replace(' ', 'T') + 'Z').getTime() > 30000) {
-      placementResult.isCorrect = false; // Forza errore se il tempo è scaduto
+      placementResult.isCorrect = false;
     }
-
-    await saveRoundState(gameId, {
+    await updateRoundState(gameId, {
       cardId: challengeCardId,
       status: placementResult.isCorrect ? 'won_round' : 'lost_round',
       round: roundNumber
@@ -160,6 +159,8 @@ app.post('/api/games/:gameId/new-card',  async (req, res) => {
     const gameId = parseInt(req.params.gameId, 10);
     const excludedCards = await getExcludedCards(gameId);
     const newCard = await getNewCard(excludedCards);
+    console.log(newCard);
+    await saveRoundState(gameId, {cardId: newCard.id, status: 'start_round', round: await getCurrentRoundNumber(gameId)});
     await startTimer(gameId);
     res.json({
       id: newCard.id,
@@ -170,7 +171,7 @@ app.post('/api/games/:gameId/new-card',  async (req, res) => {
     res.status(500).json({ error: 'Failed to get new card' });
   }
 });
-
+/*
 app.patch('/api/games/:gameId/end', isLoggedIn, async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);
@@ -181,7 +182,7 @@ app.patch('/api/games/:gameId/end', isLoggedIn, async (req, res) => {
     res.status(500).json({ error: 'Failed to end game' });
   }
 });
-
+*/
 app.get('/api/games/:gameId/state',  async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);

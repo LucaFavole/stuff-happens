@@ -67,6 +67,7 @@ function Game({ user, isDemoMode = false }) {
     const [timerActive, setTimerActive] = useState(false);
     const [errors, setErrors] = useState(0);
     const [round, setRound] = useState(1);
+    //const [initialCards, setInitialCards] = useState(null);
 
     // Limits
     const MAX_CARDS_TO_WIN = isDemoMode ? 1 : 3;
@@ -94,15 +95,17 @@ function Game({ user, isDemoMode = false }) {
                 const data = await API.getGameState(gameId);
                 if (ignore) return;
                 setOwnedCards(data.ownedCards || []);
+                //setInitialCards(data.ownedCards || []);
                 setGameState(data.state || 'PLAYING');
                 setErrors(data.errors || 0);
                 setRound((data.ownedCards?.length || 3) - 2);
             } catch (err) {
+                setRoundMessage("Server communication error." + err);
                 if (ignore) return;
                 setGameState('GAME_OVER');
             }
         };
-        loadGame();
+        loadGame().then();
         return () => { ignore = true; };
     }, [gameId, isDemoMode]);
 
@@ -138,7 +141,7 @@ function Game({ user, isDemoMode = false }) {
         setTimerActive(false);
         setGameState('WAITING_RESULT');
         try {
-            const result = await API.submitRoundChoice(gameId, slotIndex, challengeCard.id);
+            const result = await API.submitRoundChoice(gameId, slotIndex);
             setOwnedCards(result.ownedCards.sort((a, b) => a.misfortune_index - b.misfortune_index));
             setRoundMessage(result.isCorrect
                 ? `Correct! "${result.newCard.name}" (MI: ${result.newCard.misfortune_index}) added.`
@@ -149,7 +152,7 @@ function Game({ user, isDemoMode = false }) {
             setRound(prev => prev + 1);
             setGameState(result.outcome === 'active' ? 'ROUND_OVER_AWAITING_NEXT' : 'GAME_OVER');
         } catch (err) {
-            setRoundMessage("Server communication error.");
+            setRoundMessage("Server communication error." + err);
             setGameState('GAME_OVER');
         }
     };
@@ -168,7 +171,7 @@ function Game({ user, isDemoMode = false }) {
             setRound(prev => prev + 1);
             setGameState(result.outcome === 'active' ? 'ROUND_OVER_AWAITING_NEXT' : 'GAME_OVER');
         } catch (err) {
-            setRoundMessage("Server communication error.");
+            setRoundMessage("Server communication error." + err);
             setGameState('GAME_OVER');
         }
     };
@@ -216,7 +219,8 @@ function Game({ user, isDemoMode = false }) {
                 </Button>
                 <h4 className="mt-4">Cards won:</h4>
                 <Row className="justify-content-center">
-                    {ownedCards.map(card => (
+                    {ownedCards
+                        .map(card => (
                         <OwnedCardDisplay card={card} key={card.id} />
                     ))}
                 </Row>
