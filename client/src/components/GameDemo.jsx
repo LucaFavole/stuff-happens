@@ -1,152 +1,197 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Spinner, Alert } from 'react-bootstrap';
-import API from '../API/API.mjs';
-import { OwnedCardDisplay, CardToPlaceDisplay, PlacementSlot } from './GameComponents';
+// src/components/GameDemo.jsx
+import React, { useEffect, useState, useRef } from 'react';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import {
+    Container,
+    Row,
+    Col,
+    Spinner,
+    Alert,
+    Button,
+    Badge
+} from 'react-bootstrap';
+import API from '../API/API';
+import {
+    OwnedCardDisplay,
+    CardToPlaceDisplay,
+    PlacementSlot
+} from './GameComponents';
 
 function GameDemo() {
+    const { state } = useLocation();
     const { gameId } = useParams();
     const navigate = useNavigate();
+    const timerRef = useRef(null);
 
-    const [ownedCards, setOwnedCards] = useState([]);
+    // Pull initial cards from location.state (or empty)
+    const initialCards = (state?.initialCards || []).slice()
+        .sort((a, b) => a.misfortune_index - b.misfortune_index);
+
+    const [ownedCards, setOwnedCards] = useState(initialCards);
     const [challengeCard, setChallengeCard] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [timer, setTimer] = useState(30);
     const [timerActive, setTimerActive] = useState(false);
-    const [result, setResult] = useState(null); // { won: true/false, card: {...} }
-    const [errorMsg, setErrorMsg] = useState('');
-    const [showSummary, setShowSummary] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [result, setResult] = useState(null);
 
-    // Carica carte iniziali e challenge card
+    // Reset and load whenever gameId or initialCards change
     useEffect(() => {
-        let ignore = false;
-        setLoading(true);
-        setErrorMsg('');
-        Promise.all([
-            API.getGameState(gameId),
-            API.getDemoChallengeCard(gameId)
-        ])
-            .then(([gameData, challengeData]) => {
-                if (!ignore) {
-                    setOwnedCards(gameData.ownedCards || []);
-                    setChallengeCard(challengeData.card);
-                    setTimer(30);
-                    setTimerActive(true);
-                }
-            })
-            .catch(() => {
-                if (!ignore) setErrorMsg('Errore nel caricamento dati demo.');
-            })
-            .finally(() => {
-                if (!ignore) setLoading(false);
-            });
-        return () => { ignore = true; };
-    }, [gameId]);
+        let cancelled = false;
+        async function initDemo() {
+            setLoading(true);
+            setError('');
+            setResult(null);
+            setOwnedCards(initialCards);
+            clearInterval(timerRef.current);
 
-    // Timer countdown
-    useEffect(() => {
-        if (!timerActive || result) return;
-        if (timer === 0) {
-            setTimerActive(false);
-            handlePlacement(null); // timeout: nessuna scelta
-            return;
+            try {
+                // fetch the one demo challenge card
+                const card = await API.getNextChallengeCard(gameId);
+                if (cancelled) return;
+                setChallengeCard(card);
+                setTimer(30);
+                setTimerActive(true);
+            } catch (e) {
+                if (!cancelled) setError(e.message);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
         }
-        const id = setTimeout(() => setTimer(t => t - 1), 1000);
-        return () => clearTimeout(id);
-    }, [timer, timerActive, result]);
+        initDemo();
+        return () => {
+            cancelled = true;
+            clearInterval(timerRef.current);
+        };
+    }, [gameId, JSON.stringify(initialCards)]); // watch gameId and initialCards
 
-    // Gestione scelta posizione
-    const handlePlacement = (slotIndex) => {
+    // Countdown
+    useEffect(() => {
+        if (!timerActive) return;
+        timerRef.current = setInterval(() => {
+            setTimer(t => {
+                if (t <= 1) {
+                    clearInterval(timerRef.current);
+                    submitChoice(null);
+                    return 0;
+                }
+                return t - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timerRef.current);
+    }, [timerActive]);
+
+    // Send placement (or timeout) to server
+    const submitChoice = async (pos) => {
+        clearInterval(timerRef.current);
         setTimerActive(false);
-        API.submitDemoChoice(gameId, slotIndex)
-            .then((res) => {
-                setResult(res); // { won: true/false, card: {...} }
-            })
-            .catch(() => setErrorMsg('Errore di comunicazione.'));
+        try {
+            const res = await API.submitRoundChoice(gameId, pos);
+            setResult(res);
+            if (res.isCorrect && res.newCard) {
+                setOwnedCards(prev =>
+                    [...prev, res.newCard].sort((a, b) => a.misfortune_index - b.misfortune_index)
+                );
+            }
+        } catch (e) {
+            setError(e.message);
+        }
     };
 
-    // Riepilogo finale
-    const handleShowSummary = () => setShowSummary(true);
+    // Start a fresh demo
+    const handleStartNewDemo = async () => {
+        try {
+            const { gameId: newId, initialCards: newInitial } = await API.createNewDemoGame();
+            navigate(`/Game/${newId}/demo`, { state: { initialCards: newInitial } });
+        } catch {
+            setError('Unable to start a new demo.');
+        }
+    };
 
-    // Nuova partita
-    const handleNewDemo = () => navigate('/');
+    const handleBackHome = () => navigate('/');
 
     if (loading) {
         return (
             <Container className="text-center mt-5">
-                <Spinner animation="border" />
-                <p>Caricamento partita demo...</p>
+                <Spinner animation="border" /><p>Loading demo…</p>
             </Container>
         );
     }
 
-    if (errorMsg) {
+    if (error) {
         return (
             <Container className="text-center mt-5">
-                <Alert variant="danger">{errorMsg}</Alert>
-                <Button onClick={handleNewDemo}>Torna alla Home</Button>
+                <Alert variant="danger">{error}</Alert>
+                <Button onClick={handleBackHome}>Back to Home</Button>
             </Container>
         );
     }
 
-    if (showSummary) {
+    // After the one demo round
+    if (result) {
         return (
-            <Container className="text-center mt-5">
-                <h3>Riepilogo Demo</h3>
-                <p>{result && result.won ? 'Hai vinto la carta!' : 'Non hai vinto la carta.'}</p>
-                <Row className="justify-content-center">
-                    {result && result.won && <OwnedCardDisplay card={result.card} />}
+            <Container className="mt-5 text-center">
+                <h2>Demo Summary</h2>
+                <Alert variant={result.isCorrect ? 'success' : 'danger'} className="mt-4">
+                    <h4>{result.isCorrect ? 'Correct!' : 'Time Up or Incorrect'}</h4>
+                    <p>
+                        {result.isCorrect
+                            ? 'You earned this card:'
+                            : 'You did not earn the demo card.'}
+                    </p>
+                    {result.isCorrect && <OwnedCardDisplay card={result.newCard} />}
+                </Alert>
+
+                <h3 className="mt-4">All Cards</h3>
+                <Row className="justify-content-center mt-3">
+                    {ownedCards.map(c => (
+                        <Col key={c.id} xs="auto" className="mb-3">
+                            <OwnedCardDisplay card={c} />
+                        </Col>
+                    ))}
                 </Row>
-                <Button className="mt-4" onClick={handleNewDemo}>Gioca una nuova demo</Button>
+
+                <div className="d-flex justify-content-center gap-3 mt-4">
+                    <Button variant="primary" size="lg" onClick={handleStartNewDemo}>
+                        Start New Demo
+                    </Button>
+                    <Button variant="outline-secondary" size="lg" onClick={handleBackHome}>
+                        Back to Home
+                    </Button>
+                </div>
             </Container>
         );
     }
 
+    // Active demo round UI
     return (
         <Container className="mt-4">
-            <h2 className="text-center">Partita Demo: 1 solo round</h2>
-            <h5 className="text-center">Le tue carte iniziali</h5>
-            <Row className="justify-content-center">
-                {ownedCards.map(card => (
-                    <Col key={card.id} xs="auto">
-                        <OwnedCardDisplay card={card} />
-                    </Col>
-                ))}
-            </Row>
-            <hr />
-            <h5 className="text-center">Dove si colloca questa situazione?</h5>
-            <Row className="justify-content-center">
-                <Col md={6}>
-                    <CardToPlaceDisplay cardPublicDetails={challengeCard} />
+            <Row className="align-items-center mb-3">
+                <Col><h4>Demo Round</h4></Col>
+                <Col className="text-center">
+                    <Badge bg="info">Time: {timer}s</Badge>
                 </Col>
             </Row>
-            <Row className="justify-content-center align-items-center flex-nowrap" style={{ overflowX: 'auto', paddingBottom: '15px', minHeight: '200px' }}>
-                {/* Slot prima della prima carta */}
-                <PlacementSlot onPlace={() => handlePlacement(0)} disabled={!timerActive || !!result} />
-                {ownedCards.map((card, idx) => (
-                    <React.Fragment key={card.id}>
-                        <OwnedCardDisplay card={card} />
-                        <PlacementSlot onPlace={() => handlePlacement(idx + 1)} disabled={!timerActive || !!result} />
+
+            <Row className="justify-content-center mb-4">
+                <CardToPlaceDisplay cardPublicDetails={challengeCard} />
+            </Row>
+
+            <Row
+                className="justify-content-center align-items-center flex-nowrap"
+                style={{ overflowX: 'auto', padding: '20px 0', minHeight: '200px' }}
+            >
+                <PlacementSlot onPlace={() => submitChoice(0)} disabled={!timerActive} />
+                {ownedCards.map((c, i) => (
+                    <React.Fragment key={c.id}>
+                        <OwnedCardDisplay card={c} />
+                        <PlacementSlot
+                            onPlace={() => submitChoice(i + 1)}
+                            disabled={!timerActive}
+                        />
                     </React.Fragment>
                 ))}
             </Row>
-            <div className="text-center mt-3">
-                <span>Tempo rimasto: <strong>{timer}s</strong></span>
-            </div>
-            {result && (
-                <Alert variant={result.won ? "success" : "danger"} className="mt-4 text-center">
-                    {result.won
-                        ? "Corretto! Hai vinto la carta."
-                        : "Risposta errata o tempo scaduto. Non hai vinto la carta."}
-                </Alert>
-            )}
-            {result && (
-                <div className="text-center mt-3">
-                    <Button variant="info" size="lg" onClick={handleShowSummary}>
-                        Mostra riepilogo
-                    </Button>
-                </div>
-            )}
         </Container>
     );
 }

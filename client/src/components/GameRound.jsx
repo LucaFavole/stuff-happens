@@ -1,138 +1,143 @@
-import React, { useEffect, useState } from 'react';
+// src/components/GameRound.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Button, Spinner, Alert } from 'react-bootstrap';
-import API from '../API/API.mjs';
+import { Container, Row, Col, Spinner, Alert, Badge } from 'react-bootstrap';
+import API from '../API/API';
 import { OwnedCardDisplay, CardToPlaceDisplay, PlacementSlot } from './GameComponents';
 
-function GameRound({ user }) {
+function GameRound() {
     const { gameId, roundId } = useParams();
     const navigate = useNavigate();
+    const timerRef = useRef(null);
 
     const [ownedCards, setOwnedCards] = useState([]);
     const [challengeCard, setChallengeCard] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [errorsCount, setErrorsCount] = useState(0);
     const [timer, setTimer] = useState(30);
     const [timerActive, setTimerActive] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    // Load round data on mount or when roundId changes
+    // Load state and new challenge card
     useEffect(() => {
-        setLoading(true);
-        setErrorMsg('');
+        let cancelled = false;
+        const init = async () => {
+            setLoading(true);
+            setError('');
+            clearInterval(timerRef.current);
 
-        const loadRoundData = async () => {
             try {
-                const gameData = await API.getGameState(gameId);
-                const sortedCards = [...gameData.ownedCards].sort(
+                const stateData = await API.getGameState(gameId);
+                if (cancelled) return;
+                const sorted = [...stateData.ownedCards].sort(
                     (a, b) => a.misfortune_index - b.misfortune_index
                 );
-                setOwnedCards(sortedCards);
+                setOwnedCards(sorted);
+                setErrorsCount(stateData.errors);
 
                 const challenge = await API.getNextChallengeCard(gameId);
+                if (cancelled) return;
                 setChallengeCard(challenge);
-
                 setTimer(30);
                 setTimerActive(true);
-            } catch (err) {
-                setErrorMsg(`Failed to load round data: ${err}`);
+            } catch (e) {
+                if (!cancelled) setError(e.message);
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
-        loadRoundData();
+        init();
+        return () => {
+            cancelled = true;
+            clearInterval(timerRef.current);
+        };
     }, [gameId, roundId]);
 
-    // Countdown timer
+    // Countdown
     useEffect(() => {
-        if (!timerActive || !challengeCard) return;
-
-        const timerId = setInterval(() => {
+        if (!timerActive) return;
+        timerRef.current = setInterval(() => {
             setTimer(prev => {
                 if (prev <= 1) {
-                    clearInterval(timerId);
-                    handlePlacement(null); // Auto-submit on timeout
+                    clearInterval(timerRef.current);
+                    submitChoice(null);
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
+        return () => clearInterval(timerRef.current);
+    }, [timerActive]);
 
-        return () => clearInterval(timerId);
-    }, [timerActive, challengeCard]);
-
-    // Handle placement of challenge card
-    const handlePlacement = async (slotIndex) => {
+    // Submit choice and navigate to EndRound
+    const submitChoice = async (positionIndex) => {
+        clearInterval(timerRef.current);
         setTimerActive(false);
-        try {
-            const result = await API.submitRoundChoice(gameId, roundId, slotIndex);
 
-            navigate(`/Game/${gameId}/round/${roundId}/endround`, {
-                state: {
-                    result,
-                    newRoundId: parseInt(roundId) + 1,
-                    loseCount: result.loseCount
-                }
-            });
-        } catch (err) {
-            setErrorMsg(`Server error during placement: ${err}`);
+        try {
+            const res = await API.submitRoundChoice(gameId, positionIndex);
+            navigate(
+                `/Game/${gameId}/round/${roundId}/endround`,
+                { state: { result: res, errorsCount: res.errors } }
+            );
+        } catch (e) {
+            setError(e.message);
         }
     };
 
-    // UI: loading spinner
     if (loading) {
         return (
             <Container className="text-center mt-5">
-                <Spinner animation="border" />
-                <p>Loading round...</p>
+                <Spinner animation="border" /><p>Loading round...</p>
             </Container>
         );
     }
-
-    // UI: error message
-    if (errorMsg) {
+    if (error) {
         return (
             <Container className="text-center mt-5">
-                <Alert variant="danger">{errorMsg}</Alert>
-                <Button onClick={() => navigate(-1)}>Go Back</Button>
+                <Alert variant="danger">{error}</Alert>
             </Container>
         );
     }
 
-    // UI: main game round
     return (
         <Container className="mt-4">
-            <h4 className="text-center">Round {roundId}</h4>
+            {/* Top bar: Round, Timer, Errors */}
+            <Row className="align-items-center mb-4">
+                <Col xs={4}>
+                    <h4 className="m-0">Round {roundId}</h4>
+                </Col>
+                <Col xs={4} className="text-center">
+                    <Badge bg="info" pill style={{ fontSize: '1rem' }}>
+                        Time: {timer}s
+                    </Badge>
+                </Col>
+                <Col xs={4} className="text-end">
+                    <Badge bg="danger" pill style={{ fontSize: '1rem' }}>
+                        Errors: {errorsCount} / 3
+                    </Badge>
+                </Col>
+            </Row>
 
-            {/* Challenge Card */}
-            <Row className="justify-content-center">
+            {/* Challenge card */}
+            <Row className="justify-content-center mb-4">
                 <CardToPlaceDisplay cardPublicDetails={challengeCard} />
             </Row>
 
-            {/* Card placement slots */}
+            {/* Placement slots + owned cards */}
             <Row
                 className="justify-content-center align-items-center flex-nowrap"
                 style={{ overflowX: 'auto', padding: '20px 0', minHeight: '200px' }}
             >
-                {/* Slot before first owned card */}
-                <PlacementSlot onPlace={() => handlePlacement(0)} disabled={!timerActive} />
-
-                {/* Cards + slots between them */}
-                {ownedCards.map((card, index) => (
+                <PlacementSlot onPlace={() => submitChoice(0)} disabled={!timerActive} />
+                {ownedCards.map((card, idx) => (
                     <React.Fragment key={card.id}>
                         <OwnedCardDisplay card={card} />
-                        <PlacementSlot
-                            onPlace={() => handlePlacement(index)}
-                            disabled={!timerActive}
-                        />
+                        <PlacementSlot onPlace={() => submitChoice(idx + 1)} disabled={!timerActive} />
                     </React.Fragment>
                 ))}
             </Row>
-
-            {/* Countdown */}
-            <div className="text-center mt-3">
-                <span>Time left: <strong>{timer}s</strong></span>
-            </div>
         </Container>
     );
 }
