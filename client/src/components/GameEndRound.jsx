@@ -1,4 +1,3 @@
-// src/components/GameEndRound.jsx
 import React from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Container, Row, Col, Alert, Button, Card } from 'react-bootstrap';
