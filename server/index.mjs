@@ -206,7 +206,6 @@ app.get('/api/games/:gameId/state',  async (req, res) => {
   }
 });
 
-
 app.listen(port, () => {
   console.log(`Server in ascolto su http://localhost:${port}`);
 });

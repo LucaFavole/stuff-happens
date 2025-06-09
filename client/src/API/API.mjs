@@ -80,7 +80,6 @@ async function getGameState(gameId) {
     if (!response.ok) throw new Error("Failed to fetch game state");
     return await response.json();
 }
-
 const API = {
     // Auth
     logIn,
