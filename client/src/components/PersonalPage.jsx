@@ -16,7 +16,7 @@ function PersonalPage({ user }) {
     const [gameHistory, setGameHistory] = useState([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(true);
     const [errorHistory, setErrorHistory] = useState(null);
-    const [redirectToGame, setRedirectToGame] = useState(false);
+    const [redirectToGame, setRedirectToGame] = useState(null);
 
     useEffect(() => {
         setCurrentUser(user);
@@ -46,14 +46,19 @@ function PersonalPage({ user }) {
         }
     }, [currentUser]);
 
-    const handleStartGame = () => {
+    const handleStartGame = async () => {
         if (currentUser) {
-            setRedirectToGame(true);
+            try {
+                const { gameId } = await API.createNewGame();
+                setRedirectToGame(`/Game/${gameId}`);
+            } catch (err) {
+                setErrorHistory('Failed to start new game');
+            }
         }
     };
 
     if (redirectToGame) {
-        return <Navigate to="/Game" replace />; // Assuming "/" is the game route
+        return <Navigate to={redirectToGame} replace />;
     }
 
     if (!currentUser || !currentUser.id) {
@@ -104,7 +109,7 @@ function PersonalPage({ user }) {
                                 <Card key={partita.id} className="mb-3 shadow-sm hover-shadow">
                                     <Card.Header as="h5" className={`bg-${partita.outcome === 'Won' ? 'success' : 'danger'} text-white`}>
                                         Game {partita.outcome}
-                                        <span className="float-end small">{new Date(partita.date).toLocaleDateString('en-US')}</span>
+                                        <span className="float-end small">{new Date(partita.date).toLocaleTimeString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit',hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                                     </Card.Header>
                                     <Card.Body>
                                         <Card.Subtitle className="mb-2 text-muted">
