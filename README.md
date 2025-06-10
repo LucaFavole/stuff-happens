@@ -152,6 +152,6 @@
 
 ## User Credentials
 
-- **admin** / **adminpass**
-- **testuser** / **testpass**  
+- **admin** / **password**
+- **luca** / **123456**  
 

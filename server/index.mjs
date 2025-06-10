@@ -116,7 +116,6 @@ app.post('/api/games/:gameId/round',  async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);
     const { positionIndex} = req.body;
-
     const ownedCards = await getCurrentOwnedCards(gameId);
     const roundNumber = await getCurrentRoundNumber(gameId);
     const challengeCardId = await getRoundState(gameId,roundNumber).then(state => state.card_id);
@@ -158,7 +157,6 @@ app.post('/api/games/:gameId/new-card',  async (req, res) => {
     const gameId = parseInt(req.params.gameId, 10);
     const excludedCards = await getExcludedCards(gameId);
     const newCard = await getNewCard(excludedCards);
-    console.log(newCard);
     await saveRoundState(gameId, {cardId: newCard.id, status: 'start_round', round: await getCurrentRoundNumber(gameId)});
     await startTimer(gameId);
     res.json({
@@ -170,18 +168,7 @@ app.post('/api/games/:gameId/new-card',  async (req, res) => {
     res.status(500).json({ error: 'Failed to get new card' });
   }
 });
-/*
-app.patch('/api/games/:gameId/end', isLoggedIn, async (req, res) => {
-  try {
-    const gameId = parseInt(req.params.gameId, 10);
-    const { outcome, finalScore } = req.body;
-    await endGame(gameId, outcome, finalScore);
-    res.sendStatus(204);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to end game' });
-  }
-});
-*/
+
 app.get('/api/games/:gameId/state',  async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);

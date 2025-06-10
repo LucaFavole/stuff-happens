@@ -3,8 +3,9 @@ import React from 'react';
 import { Card, Button } from 'react-bootstrap';
 
 const CARD_WIDTH = '10rem';
-const CARD_HEIGHT = '14rem';
+const CARD_HEIGHT = '16rem';
 const IMG_HEIGHT = '100px';
+const IMG_WIDTH = '160px';
 const SLOT_WIDTH = '3rem';
 
 // Owned card: name wraps across lines, full width
@@ -15,19 +16,21 @@ export const OwnedCardDisplay = ({ card }) => (
             height: CARD_HEIGHT,
             margin: '0.5rem',
             display: 'flex',
-            flexDirection: 'column',
+            border: '2px solid black',
             boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
         }}
     >
+        <div style={{ display: 'flex', justifyContent: 'center'}}>
         <Card.Img
-            variant="top"
+            variant="top-center"
             src={`http://localhost:3001${card.image_filename}`}
             alt={card.name}
             style={{
                 height: IMG_HEIGHT,
-                objectFit: 'cover'
+                width: IMG_WIDTH,
             }}
         />
+        </div>
         <Card.Body
             style={{
                 padding: '0.5rem',
@@ -90,15 +93,17 @@ export const CardToPlaceDisplay = ({ cardPublicDetails }) => {
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
             }}
         >
+            <div style={{ display: 'flex', justifyContent: 'center'}}>
             <Card.Img
                 variant="top"
                 src={`http://localhost:3001${cardPublicDetails.image_filename}`}
                 alt={cardPublicDetails.name}
                 style={{
                     height: IMG_HEIGHT,
-                    objectFit: 'cover'
+                    width: IMG_WIDTH,
                 }}
             />
+            </div>
             <Card.Body
                 style={{
                     padding: '0.5rem',
