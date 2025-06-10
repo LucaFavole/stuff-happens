@@ -1,6 +1,6 @@
 // src/components/GameDemo.jsx
 import React, { useEffect, useState, useRef } from 'react';
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import {useParams, useNavigate } from 'react-router-dom';
 import {
     Container,
     Row,
@@ -18,15 +18,11 @@ import {
 } from './GameComponents';
 
 function GameDemo() {
-    const { state } = useLocation();
     const { gameId } = useParams();
     const navigate = useNavigate();
     const timerRef = useRef(null);
 
-    // Pull initial cards from location.state (or empty)
-    const initialCards = (state?.initialCards || []).slice()
-        .sort((a, b) => a.misfortune_index - b.misfortune_index);
-
+    const initialCards = useState([]);
     const [ownedCards, setOwnedCards] = useState(initialCards);
     const [challengeCard, setChallengeCard] = useState(null);
     const [timer, setTimer] = useState(30);
@@ -42,10 +38,15 @@ function GameDemo() {
             setLoading(true);
             setError('');
             setResult(null);
-            setOwnedCards(initialCards);
             clearInterval(timerRef.current);
 
             try {
+                const stateData = await API.getGameState(gameId);
+                if (cancelled) return;
+                const sorted = [...stateData.ownedCards].sort(
+                    (a, b) => a.misfortune_index - b.misfortune_index
+                );
+                setOwnedCards(sorted);
                 // fetch the one demo challenge card
                 const card = await API.getNextChallengeCard(gameId);
                 if (cancelled) return;
@@ -58,12 +59,12 @@ function GameDemo() {
                 if (!cancelled) setLoading(false);
             }
         }
-        initDemo();
+        initDemo().then();
         return () => {
             cancelled = true;
             clearInterval(timerRef.current);
         };
-    }, [gameId, JSON.stringify(initialCards)]); // watch gameId and initialCards
+    }, [gameId]); // watch gameId and initialCards
 
     // Countdown
     useEffect(() => {
@@ -139,7 +140,6 @@ function GameDemo() {
                             ? 'You earned this card:'
                             : 'You did not earn the demo card.'}
                     </p>
-                    {result.isCorrect && <OwnedCardDisplay card={result.newCard} />}
                 </Alert>
 
                 <h3 className="mt-4">All Cards</h3>

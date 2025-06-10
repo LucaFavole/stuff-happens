@@ -51,13 +51,13 @@ function App() {
                 <DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} message={message} setMessage={setMessage}/>}>
                 <Route path="/" element={loggedIn ? <Navigate to="/PersonalPage" /> : <MainPage />} />
                 <Route path="/PersonalPage" element={loggedIn ? <PersonalPage user={user} /> : <Navigate to="/login" />} />
-                <Route path="/Game/:gameId">
-                    <Route path="demo" element={<GameDemo />} />
-                    <Route index element={loggedIn ? <Game user={user} /> : <Navigate to="/login" />} />
-                    <Route path="round/:roundId" element={loggedIn ? <GameRound user={user} /> : <Navigate to="/login" />} />
-                    <Route path="round/:roundId/endround" element={loggedIn ? <GameEndRound user={user} /> : <Navigate to="/login" />} />
-                    <Route path="endgame" element={loggedIn ? <GameEndGame user={user} /> : <Navigate to="/login" />} />
-                </Route>
+            </Route>
+            <Route path="/Game/:gameId">
+                <Route path="demo" element={<GameDemo />} />
+                <Route index element={loggedIn ? <Game user={user} /> : <Navigate to="/login" />} />
+                <Route path="round/:roundId" element={loggedIn ? <GameRound user={user} /> : <Navigate to="/login" />} />
+                <Route path="round/:roundId/endround" element={loggedIn ? <GameEndRound user={user} /> : <Navigate to="/login" />} />
+                <Route path="endgame" element={loggedIn ? <GameEndGame user={user} /> : <Navigate to="/login" />} />
             </Route>
             <Route path="/login" element={loggedIn ? <Navigate replace to="/PersonalPage" /> : <LoginForm handleLogin={handleLogin} />} />
             <Route path="*" element={<NotFound />} />
@@ -65,5 +65,7 @@ function App() {
     );
 
 }
+
+
 
 export default App

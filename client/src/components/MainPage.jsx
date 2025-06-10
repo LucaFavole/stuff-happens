@@ -9,8 +9,8 @@ function MainPage() {
 
     const handleStartDemo = async () => {
         try {
-            const { gameId, initialCards } = await API.createNewDemoGame();
-            navigate(`/Game/${gameId}/demo`, { state: { initialCards } });
+            const { gameId} = await API.createNewDemoGame();
+            navigate(`/Game/${gameId}/demo`);
         } catch (err) {
             console.error('Failed to start demo game', err);
         }

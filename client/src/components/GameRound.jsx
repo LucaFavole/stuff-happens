@@ -47,7 +47,7 @@ function GameRound() {
             }
         };
 
-        init();
+        init().then();
         return () => {
             cancelled = true;
             clearInterval(timerRef.current);
@@ -79,7 +79,7 @@ function GameRound() {
             const res = await API.submitRoundChoice(gameId, positionIndex);
             navigate(
                 `/Game/${gameId}/round/${roundId}/endround`,
-                { state: { result: res, errorsCount: res.errors } }
+                { state: { result: res, errorsCount: res.errors, ownedCards: res.ownedCards} },
             );
         } catch (e) {
             setError(e.message);

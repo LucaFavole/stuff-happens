@@ -67,6 +67,20 @@ export const OwnedCardDisplay = ({ card }) => (
 export const CardToPlaceDisplay = ({ cardPublicDetails }) => {
     if (!cardPublicDetails) return null;
     return (
+        <div>
+        <h2
+            style={{
+                backgroundColor: 'transparent',
+                borderBottom: 'none',
+                textAlign: 'center',
+                fontWeight: '600',
+                padding: '0.5rem',
+                fontSize: '1.25rem', // dimensione testo
+                marginBottom: '0.5rem' // spazio sotto la scritta
+            }}
+        >
+            Place This Card
+        </h2>
         <Card
             style={{
                 width: CARD_WIDTH,
@@ -76,17 +90,6 @@ export const CardToPlaceDisplay = ({ cardPublicDetails }) => {
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
             }}
         >
-            <Card.Header
-                style={{
-                    backgroundColor: 'transparent',
-                    borderBottom: 'none',
-                    textAlign: 'center',
-                    fontWeight: '600',
-                    padding: '0.5rem'
-                }}
-            >
-                Place This Card
-            </Card.Header>
             <Card.Img
                 variant="top"
                 src={`http://localhost:3001${cardPublicDetails.image_filename}`}
@@ -119,6 +122,7 @@ export const CardToPlaceDisplay = ({ cardPublicDetails }) => {
                 </div>
             </Card.Body>
         </Card>
+        </div>
     );
 };
 

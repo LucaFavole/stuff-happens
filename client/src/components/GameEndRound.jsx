@@ -1,14 +1,14 @@
 import React from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Container, Row, Col, Alert, Button, Card } from 'react-bootstrap';
-import { OwnedCardDisplay } from './GameComponents';
+import {OwnedCardDisplay, PlacementSlot} from './GameComponents';
 
 function GameEndRound() {
     const navigate = useNavigate();
     const { state } = useLocation();
     const { gameId, roundId } = useParams();
 
-    const { result, errorsCount } = state || {};
+    const { result, errorsCount, ownedCards } = state || {};
     const currentRound = parseInt(roundId, 10);
     const nextRound = currentRound + 1;
     const isGameOver = result.outcome === 'won' || result.outcome === 'lost';
@@ -52,7 +52,16 @@ function GameEndRound() {
             <p className="text-center text-muted mb-4">
                 Errors accumulated: {errorsCount} / 3
             </p>
-
+            <Row
+                className="justify-content-center align-items-center flex-nowrap"
+                style={{ overflowX: 'auto', padding: '20px 0', minHeight: '200px' }}
+            >
+                {ownedCards.map((card) => (
+                    <React.Fragment key={card.id}>
+                        <OwnedCardDisplay card={card} />
+                    </React.Fragment>
+                ))}
+            </Row>
             <Row className="justify-content-center">
                 <Col xs="auto">
                     <Button
