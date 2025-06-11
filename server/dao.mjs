@@ -150,7 +150,7 @@ export const getNewCard = (excludedCards) => {
 export const createGame = (initialCardObjects, userId) => {
 
     return new Promise((resolve, reject) => {
-        const gameSql = `INSERT INTO Games (user_id, outcome, final_score, date) VALUES (?, ?, ?, DATETIME('now'))`;
+        const gameSql = `INSERT INTO Games (user_id, outcome, final_score, date) VALUES (?, ?, ?, DATETIME('now','localtime'))`;
         db.run(gameSql, [userId, null, 3], function(gameInsertErr) {
             if (gameInsertErr) return reject(gameInsertErr);
             const newGameId = this.lastID;
