@@ -1,23 +1,35 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Container, Row, Col, Alert, Button, Card } from 'react-bootstrap';
+import {Container, Row, Col, Alert, Button, Card, Spinner} from 'react-bootstrap';
 import {OwnedCardDisplay, PlacementSlot} from './GameComponents';
+import API from "../API/API.mjs";
 
 function GameEndRound() {
     const navigate = useNavigate();
     const { state } = useLocation();
     const { gameId, roundId } = useParams();
-
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const { result, errorsCount, ownedCards } = state || {};
     const currentRound = parseInt(roundId, 10);
     const nextRound = currentRound + 1;
     const isGameOver = result.outcome === 'won' || result.outcome === 'lost';
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
         if (isGameOver) {
             navigate(`/Game/${gameId}/endgame`);
         } else {
-            navigate(`/Game/${gameId}/round/${nextRound}`);
+            setLoading(true);
+            setError('');
+            let challengeCard;
+            try {
+                challengeCard = await API.getNextChallengeCard(gameId);
+            } catch (e) {
+                setError(e.message);
+            } finally {
+                setLoading(false);
+            }
+            navigate(`/Game/${gameId}/round/${nextRound}`, {state: {ownedCards: ownedCards, challengeCard: challengeCard, errorsCount: errorsCount}});
         }
     };
 
@@ -25,7 +37,21 @@ function GameEndRound() {
     const bodyText = result.isCorrect
         ? 'You have earned this card.'
         : 'You did not earn this card.';
-
+    if (loading) {
+        return (
+            <Container className="text-center mt-5">
+                <Spinner animation="border" />
+                <p>Caricamento carte iniziali...</p>
+            </Container>
+        );
+    }
+    if (error) {
+        return (
+            <Container className="text-center mt-5">
+                <Alert variant="danger">{error}</Alert>
+            </Container>
+        );
+    }
     return (
         <Container className="mt-5">
             <h2 className="text-center mb-4">Round {currentRound} Result</h2>

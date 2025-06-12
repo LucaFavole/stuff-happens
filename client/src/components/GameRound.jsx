@@ -1,6 +1,6 @@
 // src/components/GameRound.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import {useParams, useNavigate, useLocation} from 'react-router-dom';
 import { Container, Row, Col, Spinner, Alert, Badge } from 'react-bootstrap';
 import API from '../API/API';
 import { OwnedCardDisplay, CardToPlaceDisplay, PlacementSlot } from './GameComponents';
@@ -9,47 +9,19 @@ function GameRound() {
     const { gameId, roundId } = useParams();
     const navigate = useNavigate();
     const timerRef = useRef(null);
-
-    const [ownedCards, setOwnedCards] = useState([]);
-    const [challengeCard, setChallengeCard] = useState(null);
-    const [errorsCount, setErrorsCount] = useState(0);
+    const { state } = useLocation();
+    const {ownedCards, challengeCard,errorsCount} = state || {};
     const [timer, setTimer] = useState(30);
     const [timerActive, setTimerActive] = useState(false);
-    const [loading, setLoading] = useState(true);
+    //const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     // Load state and new challenge card
     useEffect(() => {
-        let cancelled = false;
-        const init = async () => {
-            setLoading(true);
-            setError('');
-            clearInterval(timerRef.current);
-
-            try {
-                const stateData = await API.getGameState(gameId);
-                if (cancelled) return;
-                const sorted = [...stateData.ownedCards].sort(
-                    (a, b) => a.misfortune_index - b.misfortune_index
-                );
-                setOwnedCards(sorted);
-                setErrorsCount(stateData.errors);
-
-                const challenge = await API.getNextChallengeCard(gameId);
-                if (cancelled) return;
-                setChallengeCard(challenge);
-                setTimer(30);
-                setTimerActive(true);
-            } catch (e) {
-                if (!cancelled) setError(e.message);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        };
-
-        init().then();
+        clearInterval(timerRef.current);
+        setTimer(30);
+        setTimerActive(true);
         return () => {
-            cancelled = true;
             clearInterval(timerRef.current);
         };
     }, [gameId, roundId]);
@@ -85,14 +57,14 @@ function GameRound() {
             setError(e.message);
         }
     };
-
+    /*
     if (loading) {
         return (
             <Container className="text-center mt-5">
                 <Spinner animation="border" /><p>Loading round...</p>
             </Container>
         );
-    }
+    }*/
     if (error) {
         return (
             <Container className="text-center mt-5">

@@ -7,7 +7,7 @@ import { OwnedCardDisplay } from './GameComponents';
 function Game({ user }) {
     const { gameId } = useParams();
     const navigate = useNavigate();
-
+    const [error, setError] = useState('');
     const [ownedCards, setOwnedCards] = useState([]);
     const [loading, setLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState('');
@@ -29,8 +29,18 @@ function Game({ user }) {
         return () => { ignore = true; };
     }, [gameId]);
 
-    const handleStartGame = () => {
-        navigate(`/Game/${gameId}/round/1`);
+    const handleStartGame = async () => {
+        setLoading(true);
+        setError('');
+        let challengeCard;
+        try {
+            challengeCard = await API.getNextChallengeCard(gameId);
+        } catch (e) {
+           setError(e.message);
+        } finally {
+            setLoading(false);
+        }
+        navigate(`/Game/${gameId}/round/1`, {state: { ownedCards: ownedCards, challengeCard: challengeCard, errorsCount: 0} });
     };
 
     if (loading) {
@@ -41,7 +51,13 @@ function Game({ user }) {
             </Container>
         );
     }
-
+    if (error) {
+        return (
+            <Container className="text-center mt-5">
+                <Alert variant="danger">{error}</Alert>
+            </Container>
+        );
+    }
     if (errorMsg) {
         return (
             <Container className="text-center mt-5">
