@@ -9,15 +9,15 @@ const IMG_WIDTH = '160px';
 const SLOT_WIDTH = '3rem';
 
 // Owned card: name wraps across lines, full width
-export const OwnedCardDisplay = ({ card }) => (
+export const OwnedCardDisplay = ({ card, isHighlighted }) => (
     <Card
         style={{
             width: CARD_WIDTH,
             height: CARD_HEIGHT,
             margin: '0.5rem',
             display: 'flex',
-            border: '2px solid black',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+            border: isHighlighted ? '3px solid green' : '2px solid black',
+            boxShadow: isHighlighted ? '0 0 10px 2px green' : '0 2px 6px rgba(0,0,0,0.1)',
         }}
     >
         <div style={{ display: 'flex', justifyContent: 'center'}}>

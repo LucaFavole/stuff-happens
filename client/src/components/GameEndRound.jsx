@@ -35,7 +35,7 @@ function GameEndRound() {
 
     const headingText = result.isCorrect ? 'Well done!' : 'Oops!';
     const bodyText = result.isCorrect
-        ? 'You have earned this card.'
+        ? 'You have earned this card: ' + result.newCard.name
         : 'You did not earn this card.';
     if (loading) {
         return (
@@ -54,7 +54,14 @@ function GameEndRound() {
     }
     return (
         <Container className="mt-5">
-            <h2 className="text-center mb-4">Round {currentRound} Result</h2>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="text-muted m-0">
+                    Errors accumulated: {errorsCount} / 3
+                </h2>
+                <h2 className="position-absolute start-50 translate-middle-x m-0">
+                    Round {currentRound} Result
+                </h2>
+            </div>
 
             <Row className="align-items-center justify-content-center mb-4">
                 <Col xs={12} md={6}>
@@ -66,25 +73,15 @@ function GameEndRound() {
                         <p className="mb-0">{bodyText}</p>
                     </Alert>
                 </Col>
-                {result.isCorrect && result.newCard && (
-                    <Col xs="auto" className="text-center">
-                        <Card style={{ width: '10rem' }}>
-                            <OwnedCardDisplay card={result.newCard} />
-                        </Card>
-                    </Col>
-                )}
             </Row>
-
-            <p className="text-center text-muted mb-4">
-                Errors accumulated: {errorsCount} / 3
-            </p>
             <Row
                 className="justify-content-center align-items-center flex-nowrap"
                 style={{ overflowX: 'auto', padding: '20px 0', minHeight: '200px' }}
             >
                 {ownedCards.map((card) => (
                     <React.Fragment key={card.id}>
-                        <OwnedCardDisplay card={card} />
+                        <OwnedCardDisplay card={card} isHighlighted={result.isCorrect && card.id === result.newCard.id}
+                        />
                     </React.Fragment>
                 ))}
             </Row>

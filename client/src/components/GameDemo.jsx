@@ -50,6 +50,13 @@ function GameDemo() {
                 // fetch the one demo challenge card
                 const card = await API.getNextChallengeCard(gameId);
                 if (cancelled) return;
+
+
+
+
+
+
+
                 setChallengeCard(card);
                 setTimer(30);
                 setTimerActive(true);
