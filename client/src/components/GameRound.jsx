@@ -1,14 +1,13 @@
-// src/components/GameRound.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect} from 'react';
 import {useParams, useNavigate, useLocation} from 'react-router-dom';
-import { Container, Row, Col, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Alert, Badge } from 'react-bootstrap';
 import API from '../API/API';
 import { OwnedCardDisplay, CardToPlaceDisplay, PlacementSlot } from './GameComponents';
 
 function GameRound() {
     const { gameId, roundId } = useParams();
     const navigate = useNavigate();
-    const timerRef = useRef(null);
+   // const timerRef = useRef(null);
     const { state } = useLocation();
     const {ownedCards, challengeCard,errorsCount} = state || {};
     const [timer, setTimer] = useState(30);
@@ -16,19 +15,28 @@ function GameRound() {
     //const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // Load state and new challenge card
+    // inizializzo il timer
     useEffect(() => {
-        clearInterval(timerRef.current);
+        //clearInterval(timerRef.current);
         setTimer(30);
         setTimerActive(true);
-        return () => {
-            clearInterval(timerRef.current);
-        };
+        //return () => {clearInterval(timerRef.current);};
     }, [gameId, roundId]);
 
     // Countdown
     useEffect(() => {
         if (!timerActive) return;
+        let intervalId = setInterval(() => {
+            setTimer(prev => {
+                if (prev <= 1) {
+                    clearInterval(intervalId); // Puliamo l'intervallo dall'interno
+                    submitChoice(null);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        /*
         timerRef.current = setInterval(() => {
             setTimer(prev => {
                 if (prev <= 1) {
@@ -38,13 +46,13 @@ function GameRound() {
                 }
                 return prev - 1;
             });
-        }, 1000);
-        return () => clearInterval(timerRef.current);
+        }, 1000);*/
+        return () => clearInterval(intervalId);
     }, [timerActive]);
 
     // Submit choice and navigate to EndRound
     const submitChoice = async (positionIndex) => {
-        clearInterval(timerRef.current);
+        //clearInterval(timerRef.current);
         setTimerActive(false);
 
         try {

@@ -1,5 +1,5 @@
 // src/components/GameDemo.jsx
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState} from 'react';
 import {useParams, useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -20,8 +20,7 @@ import {
 function GameDemo() {
     const { gameId } = useParams();
     const navigate = useNavigate();
-    const timerRef = useRef(null);
-
+    //const timerRef = useRef(null);
     const initialCards = useState([]);
     const [ownedCards, setOwnedCards] = useState(initialCards);
     const [challengeCard, setChallengeCard] = useState(null);
@@ -38,7 +37,7 @@ function GameDemo() {
             setLoading(true);
             setError('');
             setResult(null);
-            clearInterval(timerRef.current);
+            //clearInterval(timerRef.current);
 
             try {
                 const stateData = await API.getGameState(gameId);
@@ -50,11 +49,6 @@ function GameDemo() {
                 // fetch the one demo challenge card
                 const card = await API.getNextChallengeCard(gameId);
                 if (cancelled) return;
-
-
-
-
-
 
 
                 setChallengeCard(card);
@@ -69,13 +63,24 @@ function GameDemo() {
         initDemo().then();
         return () => {
             cancelled = true;
-            clearInterval(timerRef.current);
+            //clearInterval(timerRef.current);
         };
     }, [gameId]); // watch gameId and initialCards
 
     // Countdown
     useEffect(() => {
         if (!timerActive) return;
+        let intervalId = setInterval(() => {
+            setTimer(prev => {
+                if (prev <= 1) {
+                    clearInterval(intervalId); // Puliamo l'intervallo dall'interno
+                    submitChoice(null);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        /*
         timerRef.current = setInterval(() => {
             setTimer(t => {
                 if (t <= 1) {
@@ -85,13 +90,13 @@ function GameDemo() {
                 }
                 return t - 1;
             });
-        }, 1000);
-        return () => clearInterval(timerRef.current);
+        }, 1000);*/
+        return () => clearInterval(intervalId);
     }, [timerActive]);
 
     // Send placement (or timeout) to server
     const submitChoice = async (pos) => {
-        clearInterval(timerRef.current);
+        //clearInterval(timerRef.current);
         setTimerActive(false);
         try {
             const res = await API.submitRoundChoice(gameId, pos);
@@ -151,10 +156,11 @@ function GameDemo() {
 
                 <h3 className="mt-4">All Cards</h3>
                 <Row className="justify-content-center mt-3">
-                    {ownedCards.map(c => (
-                        <Col key={c.id} xs="auto" className="mb-3">
-                            <OwnedCardDisplay card={c} />
-                        </Col>
+                    {ownedCards.map((card) => (
+                        <React.Fragment key={card.id}>
+                            <OwnedCardDisplay card={card} isHighlighted={result.isCorrect && card.id === result.newCard.id}
+                            />
+                        </React.Fragment>
                     ))}
                 </Row>
 

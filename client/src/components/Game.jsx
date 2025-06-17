@@ -47,7 +47,7 @@ function Game({ user }) {
         return (
             <Container className="text-center mt-5">
                 <Spinner animation="border" />
-                <p>Caricamento carte iniziali...</p>
+                <p>Loading initial cards...</p>
             </Container>
         );
     }
@@ -83,7 +83,7 @@ function Game({ user }) {
                 onClick={handleStartGame}
                 disabled={ownedCards.length !== 3}
             >
-                Start Game
+                Next Round (1)
             </Button>
         </Container>
     );

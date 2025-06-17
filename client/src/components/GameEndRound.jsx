@@ -92,7 +92,7 @@ function GameEndRound() {
                         size="lg"
                         onClick={handleContinue}
                     >
-                        {isGameOver ? 'View Final Results' : 'Next Round'}
+                        {isGameOver ? 'View Final Results' : 'Next Round' + ` (${nextRound})`}
                     </Button>
                 </Col>
             </Row>

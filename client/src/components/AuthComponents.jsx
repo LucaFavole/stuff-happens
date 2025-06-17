@@ -21,12 +21,12 @@ function LoginForm(props) {
     return (
         <>
             { isPending && <Alert variant="warning">Please, wait for the server's response...</Alert> }
-            <Row>
+            <Row className="justify-content-center">
                 <Col md={6}>
                     <Form action={formAction}>
                         <Form.Group controlId='username' className='mb-3'>
                             <Form.Label>Username</Form.Label>
-                            <Form.Control type='username' name='username' required />
+                            <Form.Control type='text' name='username' required />
                         </Form.Group>
 
                         <Form.Group controlId='password' className='mb-3'>
