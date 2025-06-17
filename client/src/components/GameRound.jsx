@@ -7,12 +7,10 @@ import { OwnedCardDisplay, CardToPlaceDisplay, PlacementSlot } from './GameCompo
 function GameRound() {
     const { gameId, roundId } = useParams();
     const navigate = useNavigate();
-   // const timerRef = useRef(null);
     const { state } = useLocation();
     const {ownedCards, challengeCard,errorsCount} = state || {};
     const [timer, setTimer] = useState(30);
     const [timerActive, setTimerActive] = useState(false);
-    //const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     // inizializzo il timer

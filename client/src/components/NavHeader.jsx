@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Button, Container, Navbar } from 'react-bootstrap';
 import { Link } from "react-router";
 import { LogoutButton } from './AuthComponents';
@@ -12,7 +11,7 @@ function NavHeader(props) {
                 <div className="ms-auto d-flex align-items-center">
                     {props.loggedIn && (
                         <Link to="/PersonalPage" className="btn btn-outline-light me-2">
-                            Profilo
+                            Profile
                         </Link>
                     )}
                     {props.loggedIn ?

@@ -1,21 +1,43 @@
-// src/components/MainPage.jsx
-import React from 'react';
-import { Button, Container, Row, Col, Card } from 'react-bootstrap';
+import React, {useState} from 'react';
+import {Button, Container, Row, Col, Card, Spinner, Alert} from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import API from '../API/API.mjs';
 
 function MainPage() {
     const navigate = useNavigate();
-
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const handleStartDemo = async () => {
+        setError('');
+        setLoading(true);
         try {
-            const { gameId} = await API.createNewDemoGame();
-            navigate(`/Game/${gameId}/demo`);
-        } catch (err) {
-            console.error('Failed to start demo game', err);
+            const { gameId: newId, initialCards: newInitial } = await API.createNewDemoGame();
+            const card = await API.getNextChallengeCard(newId);
+            console.log('Starting demo game with ID:', newId, 'and initial cards:', newInitial);
+            navigate(`/Game/${newId}/demo`, { state: { initialCards: newInitial, challengeCard: card } });
+        } catch (err){
+            console.log('Error starting demo game:', err);
+            setError('Unable to start a new demo.');
+        }
+        finally {
+            setLoading(false);
         }
     };
+    if (loading) {
+        return (
+            <Container className="text-center mt-5">
+                <Spinner animation="border" /><p>Loading demo…</p>
+            </Container>
+        );
+    }
 
+    if (error) {
+        return (
+            <Container className="text-center mt-5">
+                <Alert variant="danger">{error}</Alert>
+            </Container>
+        );
+    }
     return (
         <Container className="mt-5">
             <Row className="justify-content-center">

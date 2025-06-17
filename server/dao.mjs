@@ -113,7 +113,7 @@ export const getUserHistory = (userId) => {
 
 export const getInitialCards = () => {
     return new Promise ((resolve, reject) => {
-        const sql = 'SELECT id, name, image_filename, misfortune_index FROM Cards ORDER BY RANDOM() LIMIT 3';
+        const sql = 'SELECT id, name, image_filename, misfortune_index FROM (SELECT id, name, image_filename, misfortune_index FROM Cards ORDER BY RANDOM() LIMIT 3) ORDER BY misfortune_index;';
         db.all(sql, [], (err, rows) => {
             if (err) {
                 reject(err);

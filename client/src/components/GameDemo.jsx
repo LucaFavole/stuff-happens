@@ -1,6 +1,5 @@
-// src/components/GameDemo.jsx
 import React, { useEffect, useState} from 'react';
-import {useParams, useNavigate } from 'react-router-dom';
+import {useParams, useNavigate, useLocation} from 'react-router-dom';
 import {
     Container,
     Row,
@@ -19,53 +18,21 @@ import {
 
 function GameDemo() {
     const { gameId } = useParams();
+    const { state } = useLocation();
+    const {initialCards, challengeCard} = state || {};
     const navigate = useNavigate();
-    //const timerRef = useRef(null);
-    const initialCards = useState([]);
     const [ownedCards, setOwnedCards] = useState(initialCards);
-    const [challengeCard, setChallengeCard] = useState(null);
     const [timer, setTimer] = useState(30);
     const [timerActive, setTimerActive] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
 
-    // Reset and load whenever gameId or initialCards change
     useEffect(() => {
-        let cancelled = false;
-        async function initDemo() {
-            setLoading(true);
-            setError('');
-            setResult(null);
-            //clearInterval(timerRef.current);
-
-            try {
-                const stateData = await API.getGameState(gameId);
-                if (cancelled) return;
-                const sorted = [...stateData.ownedCards].sort(
-                    (a, b) => a.misfortune_index - b.misfortune_index
-                );
-                setOwnedCards(sorted);
-                // fetch the one demo challenge card
-                const card = await API.getNextChallengeCard(gameId);
-                if (cancelled) return;
-
-
-                setChallengeCard(card);
-                setTimer(30);
-                setTimerActive(true);
-            } catch (e) {
-                if (!cancelled) setError(e.message);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        }
-        initDemo().then();
-        return () => {
-            cancelled = true;
-            //clearInterval(timerRef.current);
-        };
-    }, [gameId]); // watch gameId and initialCards
+        setOwnedCards(initialCards);
+        setTimer(30);
+        setTimerActive(true);
+    }, [gameId]);
 
     // Countdown
     useEffect(() => {
@@ -80,44 +47,37 @@ function GameDemo() {
                 return prev - 1;
             });
         }, 1000);
-        /*
-        timerRef.current = setInterval(() => {
-            setTimer(t => {
-                if (t <= 1) {
-                    clearInterval(timerRef.current);
-                    submitChoice(null);
-                    return 0;
-                }
-                return t - 1;
-            });
-        }, 1000);*/
         return () => clearInterval(intervalId);
     }, [timerActive]);
 
-    // Send placement (or timeout) to server
     const submitChoice = async (pos) => {
-        //clearInterval(timerRef.current);
         setTimerActive(false);
+        setLoading(true);
         try {
             const res = await API.submitRoundChoice(gameId, pos);
             setResult(res);
-            if (res.isCorrect && res.newCard) {
-                setOwnedCards(prev =>
-                    [...prev, res.newCard].sort((a, b) => a.misfortune_index - b.misfortune_index)
-                );
-            }
+            setOwnedCards(res.ownedCards || []);
         } catch (e) {
             setError(e.message);
+        }finally {
+            setLoading(false);
         }
     };
 
     // Start a fresh demo
     const handleStartNewDemo = async () => {
+        setError('');
+        setLoading(true);
+        setResult(null);
         try {
             const { gameId: newId, initialCards: newInitial } = await API.createNewDemoGame();
-            navigate(`/Game/${newId}/demo`, { state: { initialCards: newInitial } });
+            const card = await API.getNextChallengeCard(newId);
+            navigate(`/Game/${newId}/demo`, { state: { initialCards: newInitial, challengeCard: card } });
         } catch {
             setError('Unable to start a new demo.');
+        }
+        finally {
+            setLoading(false);
         }
     };
 
