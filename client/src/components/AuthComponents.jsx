@@ -20,6 +20,9 @@ function LoginForm(props) {
 
     return (
         <>
+            {state.error && <Row>
+                <Alert variant="danger" onClose={() => state.error=''} dismissible>{state.error}</Alert>
+            </Row>}
             { isPending && <Alert variant="warning">Please, wait for the server's response...</Alert> }
             <Row className="justify-content-center">
                 <Col md={6}>
@@ -33,9 +36,6 @@ function LoginForm(props) {
                             <Form.Label>Password</Form.Label>
                             <Form.Control type='password' name='password' required minLength={6} />
                         </Form.Group>
-
-                        {state.error && <p className="text-danger">{state.error}</p>}
-
                         <Button type='submit' disabled={isPending}>Login</Button>
                         <Link className='btn btn-danger mx-2 my-2' to={'/'} disabled={isPending}>Cancel</Link>
                     </Form>
