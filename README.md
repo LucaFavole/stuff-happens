@@ -100,13 +100,13 @@
 ## Database Tables
 
 ### Users
-| Column        | Type     | Constraints                       |
-|---------------|----------|-----------------------------------|
-| id            | INTEGER  | PRIMARY KEY, AUTOINCREMENT        |
-| username      | TEXT     | NOT NULL, UNIQUE                  |
-| password_hash | TEXT     | NOT NULL                          |
-| email         | TEXT     |                                   |
-| created_at    | DATETIME | DEFAULT CURRENT_TIMESTAMP         |
+| Column   | Type    | Constraints                |
+|----------|---------|----------------------------|
+| id       | INTEGER | PRIMARY KEY, AUTOINCREMENT |
+| name     | TEXT    | NOT NULL                   |
+| username | TEXT    | NOT NULL, UNIQUE           |
+| password | TEXT    | NOT NULL                   |
+| salt     | TEXT    | NOT NULL                   |
 
 ### Cards
 | Column           | Type    | Constraints                                 |
@@ -117,41 +117,63 @@
 | misfortune_index | REAL    | NOT NULL, UNIQUE, CHECK (0.5 ≤ value ≤ 100) |
 
 ### Games
-| Column      | Type     | Constraints                            |
-|-------------|----------|----------------------------------------|
-| id          | INTEGER  | PRIMARY KEY, AUTOINCREMENT             |
-| user_id     | INTEGER  | REFERENCES Users(id) ON DELETE CASCADE |
-| start_time  | DATETIME | DEFAULT CURRENT_TIMESTAMP              |
-| end_time    | DATETIME |                                        |
-| outcome     | TEXT     | CHECK (outcome IN ('won','lost'))      |
-| final_score | INTEGER  |                                        |
+| Column         | Type     | Constraints                            |
+|----------------|----------|----------------------------------------|
+| id             | INTEGER  | PRIMARY KEY, AUTOINCREMENT             |
+| user_id        | INTEGER  | REFERENCES Users(id) ON DELETE CASCADE |
+| date           | DATETIME | DEFAULT CURRENT_TIMESTAMP              |
+| outcome        | TEXT     | CHECK (outcome IN ('won','lost'))      |
+| final_score    | INTEGER  |                                        |
+| last_card_time | DATETIME |                                        |
 
-### GameCards
-| Column   | Type    | Constraints                                       |
-|----------|---------|---------------------------------------------------|
-| id       | INTEGER | PRIMARY KEY, AUTOINCREMENT                        |
-| game_id  | INTEGER | NOT NULL, REFERENCES Games(id) ON DELETE CASCADE  |
-| card_id  | INTEGER | NOT NULL, REFERENCES Cards(id) ON DELETE RESTRICT |
-
-### RoundStates
-| Column       | Type     | Constraints                                                                    |
-|--------------|----------|--------------------------------------------------------------------------------|
-| id           | INTEGER  | PRIMARY KEY, AUTOINCREMENT                                                     |
-| game_id      | INTEGER  | NOT NULL, REFERENCES Games(id) ON DELETE CASCADE                               |
-| round_number | INTEGER  | NOT NULL                                                                       |
-| card_id      | INTEGER  | NOT NULL, REFERENCES Cards(id) ON DELETE RESTRICT                              |
-| status       | TEXT     | NOT NULL, CHECK (status IN ('start_round','initial','won_round','lost_round')) |
-| timestamp    | DATETIME | DEFAULT CURRENT_TIMESTAMP                                                      |
+### GameDetails
+| Column          | Type    | Constraints                                                   |
+|-----------------|---------|---------------------------------------------------------------|
+| game_id         | INTEGER | PRIMARY KEY NOT NULL, REFERENCES Games(id) ON DELETE CASCADE  |
+| card_id         | INTEGER | PRIMARY KEY NOT NULL, REFERENCES Cards(id) ON DELETE RESTRICT |
+| round_presented | INTEGER |                                                               |
+| status          | TEXT    | NOT NULL, CHECK (status IN ('initial','won','lost'))          |
 
 
 ## Main React Components
+- `GameRound` (in `GameRound.jsx`):  
+  Manages a single game round, displaying the timer, owned cards, the challenge card, and placement slots. The user has 30 seconds to choose where to insert the new card based on the misfortune index, with up to three mistakes allowed. After time runs out or a choice is made, the game proceeds by showing the round result and updating the owned cards. Any errors or messages are displayed to inform the user of the outcome.
 
+- `MainPage` (in `MainPage.jsx`):  
+  Represents the game's landing page, explaining the rules and offering the option to start a demo game. Handles loading states and displays errors if the demo cannot be started. Registered users can access the full game, while visitors can try a single demo round.
+
+- `NavHeader` (in `NavHeader.jsx`):  
+  Displays the main application header and navigation menu. Shows the game title, navigation links, and login/logout button depending on user authentication status. Provides quick access to the profile when the user is logged in.
+
+- `AuthComponents` (in `AuthComponents.jsx`):  
+  Contains authentication components, such as the login form and logout button. Handles credential submission, displays error messages on failed authentication, and provides visual feedback during login or logout processes.
+
+- `DefaultLayout` (in `DefaultLayout.jsx`):  
+  Defines the app's base layout, including the navigation header and display of any global messages. Uses the `Outlet` component to dynamically render child pages and show informational alerts to the user.
+
+- `Game` (in `Game.jsx`):  
+  Manages the display of a game's initial cards and the game state for authenticated users. Allows starting the first round, displays any loading errors, and updates the list of owned cards in real time.
+
+- `GameComponents` (in `GameComponents.jsx`):  
+  Contains reusable visual components for displaying cards and placement slots. These components are used throughout the game to show owned cards, the challenge card, and possible insertion positions.
+
+- `GameDemo` (in `GameDemo.jsx`):  
+  Handles the game's demo mode, letting visitors try a single round. Displays the timer, owned cards, challenge card, and the result of the demo round, with options to retry or return to the home page.
+
+- `GameEndGame` (in `GameEndGame.jsx`):  
+  Shows the end-of-game screen, indicating whether the user won or lost. Displays the number of collected cards, mistakes made, and allows starting a new game or returning to the personal profile. Handles errors during the final state loading.
+
+- `GameEndRound` (in `GameEndRound.jsx`):  
+  Displays the result of the just-finished round, indicating if the choice was correct and updating owned cards and error count. Allows proceeding to the next round or viewing final results in case of victory or defeat.
+
+- `PersonalPage` (in `PersonalPage.jsx`):  
+  Represents the user's personal page, showing the history of played games and details of collected cards. Encourages the user to start a new challenge or review past results, and handles cases where user data or history are unavailable.
 
 ## Screenshot
-
+![Screenshot](./screenshot/screen1.png)
+![Screenshot](./screenshot/screen2.png)
 
 ## User Credentials
-
-- **admin** / **password**
-- **luca** / **123456**  
+- **admin** / **password** (without any games in history)
+- **luca** / **123456**  (with some games in history)
 
