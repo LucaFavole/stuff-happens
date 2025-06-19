@@ -2,6 +2,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import {useEffect, useState} from 'react'
 
 import './App.css'
+import MainPage from "./components/MainPage.jsx";
 import Game from "./components/Game";
 import PersonalPage from "./components/PersonalPage";
 import DefaultLayout from "./components/DefaultLayout.jsx";

@@ -61,8 +61,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false }
 }));
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.authenticate('session'));
 
 // Auth middleware
 const isLoggedIn = (req, res, next) => req.isAuthenticated() ? next() : res.status(401).json({ error: 'Unauthorized' });
