@@ -209,7 +209,6 @@ export const updateRoundState = (gameId, roundState) => {
             ],
             function(err) {
                 if (err) {
-                    console.error("Error updating round state:", err);
                     reject(err);
                 } else {
                     resolve({ detailId: this.changes });

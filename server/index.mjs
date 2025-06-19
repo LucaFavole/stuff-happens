@@ -116,11 +116,9 @@ app.post('/api/games/:gameId/round',  async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId, 10);
     const { positionIndex} = req.body;
-    console.log(req.body,req.params);
     const ownedCards = await getCurrentOwnedCards(gameId);
     const roundNumber = await getCurrentRoundNumber(gameId);
     const challengeCardId = await getRoundState(gameId,roundNumber).then(state => state.card_id);
-    console.log("aaa");
     const placementResult = await checkPlacement(challengeCardId, ownedCards, positionIndex);
     const lastCardTime = await endTimer(gameId);
     if (Date.now() - new Date(lastCardTime.replace(' ', 'T') + 'Z').getTime() > 30000) {

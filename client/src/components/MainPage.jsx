@@ -13,10 +13,8 @@ function MainPage() {
         try {
             const { gameId: newId, initialCards: newInitial } = await API.createNewDemoGame();
             const card = await API.getNextChallengeCard(newId);
-            console.log('Starting demo game with ID:', newId, 'and initial cards:', newInitial);
             navigate(`/Game/${newId}/demo`, { state: { initialCards: newInitial, challengeCard: card } });
         } catch (err){
-            console.log('Error starting demo game:', err);
             setError('Unable to start a new demo.');
         }
         finally {

@@ -34,7 +34,6 @@ function PersonalPage({ user }) {
                     setIsLoadingHistory(false);
                 })
                 .catch(err => {
-                    console.error("Error fetching game history:", err);
                     setErrorHistory(err.message || 'Failed to load game history.');
                     setGameHistory([]);
                     setIsLoadingHistory(false);

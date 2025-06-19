@@ -10,8 +10,8 @@ import dayjs from 'dayjs';
 function User(id, username, hashedPassword, salt) {
     this.id = id;
     this.username = username;
-    this.hashedPassword = hashedPassword; // In a real application, you wouldn't often pass hash and salt like this
-    this.salt = salt;                   // but the model reflects the table structure.
+    this.hashedPassword = hashedPassword;
+    this.salt = salt;
 }
 
 /**
