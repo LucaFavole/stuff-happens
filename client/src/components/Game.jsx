@@ -68,7 +68,7 @@ function Game({ user }) {
 
     return (
         <Container className="text-center mt-5">
-            <h2>Le tue carte iniziali</h2>
+            <h2>Your initials cards</h2>
             <Row className="justify-content-center">
                 {ownedCards.map(card => (
                     <Col key={card.id} xs="auto">

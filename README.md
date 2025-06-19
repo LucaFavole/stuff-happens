@@ -33,21 +33,97 @@
   NotFound: fallback 404 page.
 
 ## API Server
+## API Server
 
 - **POST** `/api/sessions`
   - Body: `{ "username": "string", "password": "string" }`
   - Response 201: authenticated user object
+  - Example:
+    ```
+    Request:
+    POST /api/sessions
+    {
+      "username": "luca",
+      "password": "123456"
+    }
+
+    Response:
+    {
+      "id": 1,
+      "username": "luca",
+      "name": "Luca Favole"
+    }
+    ```
 
 - **DELETE** `/api/sessions/current`
   - Response 204: no content
+  - Example:
+    ```
+    Request:
+    DELETE /api/sessions/current
+
+    Response:
+    (No content)
+    ```
 
 - **GET** `/api/sessions/current`
   - Response 200: user object if authenticated
   - Response 401: `{ "error": "Unauthenticated" }`
+  - Example:
+    ```
+    Request:
+    GET /api/sessions/current
+
+    Response (authenticated):
+    {
+      "id": 1,
+      "username": "luca",
+      "name": "Luca Favole"
+    }
+
+    Response (unauthenticated):
+    {
+      "error": "Unauthenticated"
+    }
+    ```
 
 - **GET** `/api/users/:id/history`
   - URL param: `id` (user ID)
   - Response 200: array of past game records
+  - Example:
+    ```
+    Request:
+    GET /api/users/1/history
+
+    Response:
+    {
+      "id": 1,
+      "username": "luca",
+      "name": "Luca Favole",
+      "gameHistory": [
+        {
+          "id": 101,
+          "outcome": "Won",
+          "date": "2023-10-01T14:30:00.000Z",
+          "totalCardsCollected": 6,
+          "cardsPlayed": [
+            { "round": 1, "situation": "Car accident", "won": true },
+            { "round": 2, "situation": "House fire", "won": false }
+          ]
+        },
+        {
+          "id": 102,
+          "outcome": "Lost",
+          "date": "2023-10-02T15:00:00.000Z",
+          "totalCardsCollected": 3,
+          "cardsPlayed": [
+            { "round": 1, "situation": "Flood", "won": true },
+            { "round": 2, "situation": "Earthquake", "won": false }
+          ]
+        }
+      ]
+    }
+    ```
 
 - **POST** `/api/games`
   - No request body
@@ -61,12 +137,39 @@
       ]
     }
     ```
+  - Example:
+    ```
+    Request:
+    POST /api/games
+
+    Response:
+    {
+      "gameId": 201,
+      "initialCards": [
+        { "id": 1, "name": "Car accident", "image_filename": "car_accident.jpg", "misfortune_index": 25.5 },
+        { "id": 2, "name": "House fire", "image_filename": "house_fire.jpg", "misfortune_index": 50.0 },
+        { "id": 3, "name": "Flood", "image_filename": "flood.jpg", "misfortune_index": 75.0 }
+      ]
+    }
+    ```
 
 - **POST** `/api/games/:gameId/new-card`
   - URL param: `gameId`
   - Response 200:
     ```
     { "id": number, "name": string, "image_filename": string }
+    ```
+  - Example:
+    ```
+    Request:
+    POST /api/games/201/new-card
+
+    Response:
+    {
+      "id": 4,
+      "name": "Earthquake",
+      "image_filename": "earthquake.jpg"
+    }
     ```
 
 - **POST** `/api/games/:gameId/round`
@@ -83,6 +186,28 @@
       "outcome": "playing" | "won" | "lost"
     }
     ```
+  - Example:
+    ```
+    Request:
+    POST /api/games/201/round
+    {
+      "positionIndex": 2
+    }
+
+    Response:
+    {
+      "isCorrect": true,
+      "newCard": { "id": 4, "name": "Earthquake", "image_filename": "earthquake.jpg", "misfortune_index": 60.0 },
+      "ownedCards": [
+        { "id": 1, "name": "Car accident", "image_filename": "car_accident.jpg", "misfortune_index": 25.5 },
+        { "id": 2, "name": "House fire", "image_filename": "house_fire.jpg", "misfortune_index": 50.0 },
+        { "id": 4, "name": "Earthquake", "image_filename": "earthquake.jpg", "misfortune_index": 60.0 }
+      ],
+      "errors": 0,
+      "round": 2,
+      "outcome": "playing"
+    }
+    ```
 
 - **GET** `/api/games/:gameId/state`
   - URL param: `gameId`
@@ -93,6 +218,23 @@
       "state": "PLAYING" | "WON" | "LOST",
       "errors": number,
       "round": number
+    }
+    ```
+  - Example:
+    ```
+    Request:
+    GET /api/games/201/state
+
+    Response:
+    {
+      "ownedCards": [
+        { "id": 1, "name": "Car accident", "image_filename": "car_accident.jpg", "misfortune_index": 25.5 },
+        { "id": 2, "name": "House fire", "image_filename": "house_fire.jpg", "misfortune_index": 50.0 },
+        { "id": 4, "name": "Earthquake", "image_filename": "earthquake.jpg", "misfortune_index": 60.0 }
+      ],
+      "state": "PLAYING",
+      "errors": 1,
+      "round": 2
     }
     ```
 
