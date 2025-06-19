@@ -32,7 +32,7 @@ function GameDemo() {
         setOwnedCards(initialCards);
         setTimer(30);
         setTimerActive(true);
-    }, [gameId]);
+    }, [initialCards, gameId]);
 
     // Countdown
     useEffect(() => {
@@ -41,7 +41,7 @@ function GameDemo() {
             setTimer(prev => {
                 if (prev <= 1) {
                     clearInterval(intervalId); // Puliamo l'intervallo dall'interno
-                    submitChoice(null);
+                    submitChoice(null).then();
                     return 0;
                 }
                 return prev - 1;

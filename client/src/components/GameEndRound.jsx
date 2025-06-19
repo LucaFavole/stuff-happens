@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import {Container, Row, Col, Alert, Button, Card, Spinner} from 'react-bootstrap';
-import {OwnedCardDisplay, PlacementSlot} from './GameComponents';
+import {Container, Row, Col, Alert, Button, Spinner} from 'react-bootstrap';
+import {OwnedCardDisplay} from './GameComponents';
 import API from "../API/API.mjs";
 
 function GameEndRound() {

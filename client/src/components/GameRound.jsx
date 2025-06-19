@@ -15,10 +15,8 @@ function GameRound() {
 
     // inizializzo il timer
     useEffect(() => {
-        //clearInterval(timerRef.current);
         setTimer(30);
         setTimerActive(true);
-        //return () => {clearInterval(timerRef.current);};
     }, [gameId, roundId]);
 
     // Countdown
@@ -28,31 +26,18 @@ function GameRound() {
             setTimer(prev => {
                 if (prev <= 1) {
                     clearInterval(intervalId); // Puliamo l'intervallo dall'interno
-                    submitChoice(null);
+                    submitChoice(null).then();
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
-        /*
-        timerRef.current = setInterval(() => {
-            setTimer(prev => {
-                if (prev <= 1) {
-                    clearInterval(timerRef.current);
-                    submitChoice(null);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);*/
         return () => clearInterval(intervalId);
     }, [timerActive]);
 
     // Submit choice and navigate to EndRound
     const submitChoice = async (positionIndex) => {
-        //clearInterval(timerRef.current);
         setTimerActive(false);
-
         try {
             const res = await API.submitRoundChoice(gameId, positionIndex);
             navigate(
@@ -63,14 +48,6 @@ function GameRound() {
             setError(e.message);
         }
     };
-    /*
-    if (loading) {
-        return (
-            <Container className="text-center mt-5">
-                <Spinner animation="border" /><p>Loading round...</p>
-            </Container>
-        );
-    }*/
     if (error) {
         return (
             <Container className="text-center mt-5">

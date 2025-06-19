@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Alert, Button, Spinner, ButtonGroup } from 'react-bootstrap';
+import { Container, Row, Col, Alert, Button, Spinner} from 'react-bootstrap';
 import API from '../API/API';
 import { OwnedCardDisplay } from './GameComponents';
 

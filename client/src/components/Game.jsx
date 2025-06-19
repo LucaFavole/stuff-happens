@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Spinner, Alert } from 'react-bootstrap';
 import API from '../API/API.mjs';
 import { OwnedCardDisplay } from './GameComponents';
 
-function Game({ user }) {
+function Game() {
     const { gameId } = useParams();
     const navigate = useNavigate();
     const [error, setError] = useState('');

@@ -81,10 +81,10 @@ app.get('/api/sessions/current', (req, res) => {
   req.isAuthenticated() ? res.json(req.user) : res.status(401).json({ error: 'Unauthenticated' });
 });
 
-app.get('/api/users/:id/history', isLoggedIn, async (req, res) => {
+app.get('/api/history', isLoggedIn, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id, 10);
-    if (req.user.id !== userId) return res.status(403).json({ error: 'Forbidden' });
+    const userId = parseInt(req.user? req.user.id: null, 10);
+    if (userId == null) return res.status(403).json({ error: 'Forbidden' });
     const history = await getUserHistory(userId);
     history ? res.json(history) : res.status(404).json({ error: 'History not found' });
   } catch (error) {

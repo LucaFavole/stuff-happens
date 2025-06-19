@@ -2,7 +2,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import {useEffect, useState} from 'react'
 
 import './App.css'
-import MainPage from "./components/MainPage.jsx";
 import Game from "./components/Game";
 import PersonalPage from "./components/PersonalPage";
 import DefaultLayout from "./components/DefaultLayout.jsx";
@@ -33,10 +32,8 @@ function App() {
         try {
             const user = await API.logIn(credentials);
             setLoggedIn(true);
-            //setMessage({msg: `Welcome, ${user.name}!`, type: 'success'});
             setUser(user);
         }catch(err) {
-            //setMessage({msg: err.message? err.message : String(err), type: 'danger'});
             throw err;
         }
     };

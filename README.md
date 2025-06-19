@@ -33,7 +33,6 @@
   NotFound: fallback 404 page.
 
 ## API Server
-## API Server
 
 - **POST** `/api/sessions`
   - Body: `{ "username": "string", "password": "string" }`
@@ -87,9 +86,31 @@
     }
     ```
 
-- **GET** `/api/users/:id/history`
-  - URL param: `id` (user ID)
-  - Response 200: array of past game records
+- **GET** `/api/history`
+    - No request body
+    - Response 200: array of past game records
+    ```
+    {
+      "id": number,
+      "username": string,
+      "name": string,
+      "gameHistory": [
+        {
+          "id": number,
+          "outcome": "Won" | "Lost",
+          "date": string, // ISO 8601 format
+          "totalCardsCollected": number,
+          "cardsPlayed": [
+            {
+              "round": number, // 0 for initial cards
+              "situation": string, // card name
+              "won": boolean // true if the card was obtained
+            }
+          ]
+        }
+      ]
+    }
+    ```
   - Example:
     ```
     Request:
@@ -238,7 +259,6 @@
     }
     ```
 
-## Database Tables
 ## Database Tables
 
 ### Users

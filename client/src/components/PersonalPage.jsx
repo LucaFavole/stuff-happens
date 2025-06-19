@@ -5,8 +5,8 @@ import API from "../API/API.mjs";
 import "../models/models.mjs"
 
 
-const fetchGameHistoryAPI = async (userId) => {
-    const history = await API.getUserHistory(userId);
+const fetchGameHistoryAPI = async () => {
+    const history = await API.getUserHistory();
     return history || [];
 };
 
@@ -28,7 +28,7 @@ function PersonalPage({ user }) {
             setErrorHistory(null);
             setGameHistory([]);
 
-            fetchGameHistoryAPI(currentUser.id)
+            fetchGameHistoryAPI()
                 .then(profileData => {
                     setGameHistory(profileData?.gameHistory || []);
                     setIsLoadingHistory(false);

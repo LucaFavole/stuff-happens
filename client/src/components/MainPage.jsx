@@ -15,7 +15,7 @@ function MainPage() {
             const card = await API.getNextChallengeCard(newId);
             navigate(`/Game/${newId}/demo`, { state: { initialCards: newInitial, challengeCard: card } });
         } catch (err){
-            setError('Unable to start a new demo.');
+            setError('Unable to start a new demo: '+err);
         }
         finally {
             setLoading(false);

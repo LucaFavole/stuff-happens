@@ -69,8 +69,8 @@ const submitRoundChoice = async (gameId, positionIndex) => {
 };
 
 // History API
-const getUserHistory = async (userId) => {
-    const response = await fetch(`${SERVER_URL}/users/${userId}/history`, {
+const getUserHistory = async () => {
+    const response = await fetch(`${SERVER_URL}/history`, {
         credentials: 'include'
     });
     return handleResponse(response);
