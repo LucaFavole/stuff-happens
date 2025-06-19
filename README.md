@@ -307,11 +307,14 @@
 - `NavHeader` (in `NavHeader.jsx`):  
   Displays the main application header and navigation menu. Shows the game title, navigation links, and login/logout button depending on user authentication status. Provides quick access to the profile when the user is logged in.
 
-- `AuthComponents` (in `AuthComponents.jsx`):  
-  Contains authentication components, such as the login form and logout button. Handles credential submission, displays error messages on failed authentication, and provides visual feedback during login or logout processes.
+- `LoginForm` (`client/src/components/AuthComponents.jsx`):  
+  A login form for registered users. Handles credential submission, displays error messages on failed authentication, and provides visual feedback during login.
+
+- `LogoutButton` (`client/src/components/AuthComponents.jsx`):  
+  A button for logging out the user.
 
 - `DefaultLayout` (in `DefaultLayout.jsx`):  
-  Defines the app's base layout, including the navigation header and display of any global messages. Uses the `Outlet` component to dynamically render child pages and show informational alerts to the user.
+  Defines the app's base layout, including the navigation header and display of any global messages.
 
 - `Game` (in `Game.jsx`):  
   Manages the display of a game's initial cards and the game state for authenticated users. Allows starting the first round, displays any loading errors, and updates the list of owned cards in real time.
