@@ -340,5 +340,5 @@
 
 ## User Credentials
 - **admin** / **password** (without any games in history)
-- **luca** / **123456**  (with some games in history)
+- **luca02** / **123456**  (with some games in history)
 
